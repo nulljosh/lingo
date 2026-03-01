@@ -226,6 +226,14 @@ questions.anatomy12 = [
     { type: 'mathChoice', question: 'Functional unit of kidney?', answer: 'Nephron', choices: ['Glomerulus', 'Nephron', 'Loop of Henle', 'Collecting duct'] }
 ];
 
+// Auto-assign stable IDs to all questions for SRS tracking
+Object.keys(questions).forEach(subject => {
+    if (subject === 'default') return;
+    questions[subject].forEach((q, i) => {
+        if (!q.id) q.id = `${subject}_${i}`;
+    });
+});
+
 // Update categories to include BC curriculum
 categories.math.subjects.push(
     { id: 'precalc11', name: 'Pre-Calculus 11', icon: 'fa-solid fa-book', level: 'BC Grade 11' },
