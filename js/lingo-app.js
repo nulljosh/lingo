@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
-    // Category tabs
     document.querySelectorAll('.category-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
@@ -32,7 +31,6 @@ function setupEventListeners() {
         });
     });
 
-    // Buttons
     document.getElementById('checkBtn').addEventListener('click', checkAnswer);
     document.getElementById('skipBtn').addEventListener('click', skipQuestion);
     document.getElementById('continueBtn').addEventListener('click', continueLearning);
@@ -41,19 +39,18 @@ function setupEventListeners() {
 function renderSubjects(category) {
     const categoryData = categories[category];
     if (!categoryData) return;
-    
+
     document.getElementById('categoryTitle').textContent = categoryData.title;
-    
+
     const grid = document.getElementById('subjectGrid');
     grid.innerHTML = categoryData.subjects.map(subject => `
         <div class="subject-card" data-subject="${subject.id}">
-            <div class="subject-icon">${subject.icon}</div>
+            <div class="subject-icon"><i class="${subject.icon}"></i></div>
             <div class="subject-name">${subject.name}</div>
             <div class="subject-level">${subject.level}</div>
         </div>
     `).join('');
 
-    // Add click handlers
     grid.querySelectorAll('.subject-card').forEach(card => {
         card.addEventListener('click', () => selectSubject(card));
     });
@@ -69,20 +66,20 @@ function selectSubject(card) {
 function resetToHome() {
     document.getElementById('lessonContainer').classList.remove('active');
     document.getElementById('resultContainer').classList.remove('active');
-    document.getElementById('subjectSelection').parentElement.style.display = 'block';
+    document.getElementById('subjectSelection').style.display = 'block';
     document.querySelectorAll('.subject-card').forEach(card => {
         card.classList.remove('selected');
     });
 }
 
 function startLesson() {
-    document.getElementById('subjectSelection').parentElement.style.display = 'none';
+    document.getElementById('subjectSelection').style.display = 'none';
     document.getElementById('lessonContainer').classList.add('active');
-    
+
     gameState.currentQuestion = 0;
     gameState.correctAnswers = 0;
     gameState.hearts = 5;
-    
+
     updateStats();
     loadQuestion();
 }
@@ -91,18 +88,15 @@ function loadQuestion() {
     const subjectQuestions = questions[gameState.selectedSubject] || questions.default;
     const question = subjectQuestions[gameState.currentQuestion % subjectQuestions.length];
 
-    // Update progress
     const progress = (gameState.currentQuestion / gameState.totalQuestions) * 100;
     document.getElementById('progressBar').style.width = `${progress}%`;
+    document.getElementById('progressLabel').textContent = `${gameState.currentQuestion} / ${gameState.totalQuestions}`;
 
-    // Clear feedback
     document.getElementById('feedback').classList.remove('show');
 
-    // Reset state
     gameState.currentAnswer = null;
     gameState.answerWords = [];
 
-    // Reset button
     document.getElementById('checkBtn').textContent = 'Check';
     document.getElementById('checkBtn').onclick = checkAnswer;
     document.getElementById('checkBtn').disabled = false;
@@ -146,7 +140,7 @@ function renderQuestion(question) {
     } else if (question.type === 'listening') {
         container.innerHTML = `
             <div class="question-type">Type what you hear</div>
-            <div class="question-text">🔊 <em>${question.audio}</em></div>
+            <div class="question-text"><i class="fa-solid fa-volume-high" style="margin-right: 0.5rem; opacity: 0.5;"></i>${question.audio}</div>
             <input type="text" class="translation-input" id="listeningInput" placeholder="Type your answer here...">
         `;
 
@@ -182,7 +176,7 @@ function toggleWord(chip) {
         gameState.answerWords.push(word);
     }
 
-    answerBox.innerHTML = gameState.answerWords.map(w => 
+    answerBox.innerHTML = gameState.answerWords.map(w =>
         `<div class="word-chip">${w}</div>`
     ).join('');
 
@@ -207,27 +201,24 @@ function checkAnswer() {
         isCorrect = normalizedInput === normalizedAnswer;
     }
 
-    // Show feedback
     const feedback = document.getElementById('feedback');
     if (isCorrect) {
         feedback.className = 'feedback correct show';
-        feedback.innerHTML = '✅ Correct! Well done!';
+        feedback.textContent = 'Correct.';
         gameState.correctAnswers++;
         gameState.xp += 10;
         localStorage.setItem('xp', gameState.xp);
     } else {
         feedback.className = 'feedback incorrect show';
-        feedback.innerHTML = `❌ The correct answer is: <strong>${question.answer}</strong>`;
+        feedback.innerHTML = `Incorrect. The answer is: <strong>${question.answer}</strong>`;
         gameState.hearts--;
     }
 
     updateStats();
 
-    // Update button
     document.getElementById('checkBtn').textContent = 'Continue';
     document.getElementById('checkBtn').onclick = nextQuestion;
 
-    // Visual feedback for choices
     if (question.type === 'translation' || question.type === 'mathChoice') {
         document.querySelectorAll('.choice-btn').forEach(btn => {
             btn.style.pointerEvents = 'none';
@@ -261,14 +252,13 @@ function nextQuestion() {
 function showResults() {
     document.getElementById('lessonContainer').classList.remove('active');
     document.getElementById('resultContainer').classList.add('active');
-    
+
     document.getElementById('correctCount').textContent = gameState.correctAnswers;
     document.getElementById('xpEarned').textContent = gameState.correctAnswers * 10;
 
-    // Update streak
     const today = new Date().toDateString();
     const lastPlayed = localStorage.getItem('lastPlayed');
-    
+
     if (lastPlayed !== today) {
         gameState.streak++;
         localStorage.setItem('streak', gameState.streak);
@@ -278,7 +268,7 @@ function showResults() {
 
 function continueLearning() {
     document.getElementById('resultContainer').classList.remove('active');
-    document.getElementById('subjectSelection').parentElement.style.display = 'block';
+    document.getElementById('subjectSelection').style.display = 'block';
     document.querySelectorAll('.subject-card').forEach(card => {
         card.classList.remove('selected');
     });
@@ -294,12 +284,12 @@ function updateStats() {
 function checkStreak() {
     const lastPlayed = localStorage.getItem('lastPlayed');
     const today = new Date().toDateString();
-    
+
     if (lastPlayed) {
         const lastDate = new Date(lastPlayed);
         const todayDate = new Date(today);
         const dayDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-        
+
         if (dayDiff > 1) {
             gameState.streak = 0;
             localStorage.setItem('streak', 0);
