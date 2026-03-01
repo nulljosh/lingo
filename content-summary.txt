@@ -1,0 +1,25 @@
+
+Lingo Content Summary
+=====================
+
+Languages (12):
+- Spanish, French, German, Italian (10-15 questions each)
+- Portuguese, Japanese, Chinese, Korean, Russian, Arabic, Hindi, Dutch (2-5 questions each)
+
+Programming (7):
+- JavaScript, Python, Rust, C++, Java, Go, SQL (10 questions each)
+
+Math (8):
+- Arithmetic, Algebra, Geometry, Trigonometry
+- Calculus, Statistics, Linear Algebra, Logic
+
+Science (3):
+- Physics, Chemistry, Biology (10 questions each)
+
+Music (2):
+- Music Theory, Music History (10 questions each)
+
+Skills & More (5):
+- Chess, World History, Geography, Coding Basics, Art History
+
+Total: 40+ topics, 300+ questions
