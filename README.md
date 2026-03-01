@@ -4,7 +4,7 @@
 
 A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
 
-**[Live Site](https://nulljosh.github.io/lingo/)**
+**[Live Site](https://heyitsmejosh.com/lingo/)**
 
 ## What it does
 
@@ -38,7 +38,7 @@ cd lingo
 open index.html
 ```
 
-Or visit the [live site](https://nulljosh.github.io/lingo/) directly.
+Or visit the [live site](https://heyitsmejosh.com/lingo/) directly.
 
 ## Project Structure
 
