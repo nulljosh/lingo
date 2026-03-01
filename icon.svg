@@ -1,25 +1,8 @@
 <svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle solid color -->
-  <circle cx="64" cy="64" r="60" fill="#667eea" />
-  
-  <!-- Glass effect overlay -->
-  <circle cx="64" cy="64" r="58" fill="white" fill-opacity="0.1" />
-  
-  <!-- Graduation cap icon -->
-  <g transform="translate(64, 64)">
-    <!-- Cap base -->
-    <path d="M -30 -5 L 0 -15 L 30 -5 L 30 5 L 0 15 L -30 5 Z" 
-          fill="white" fill-opacity="0.9" stroke="white" stroke-width="2"/>
-    
-    <!-- Mortarboard top -->
-    <path d="M -35 -10 L 0 -20 L 35 -10 L 0 0 Z" 
-          fill="white" stroke="white" stroke-width="2"/>
-    
-    <!-- Tassel -->
-    <line x1="0" y1="-20" x2="15" y2="-8" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="15" cy="-8" r="3" fill="white"/>
+  <circle cx="64" cy="64" r="60" fill="#667eea"/>
+  <g transform="translate(64, 64)" fill="white">
+    <path d="M -30 -5 L 0 -15 L 30 -5 L 30 5 L 0 15 L -30 5 Z"/>
+    <path d="M -35 -10 L 0 -20 L 35 -10 L 0 0 Z"/>
+    <circle cx="15" cy="-8" r="3"/>
   </g>
-  
-  <!-- Subtle inner glow -->
-  <circle cx="64" cy="64" r="55" fill="none" stroke="white" stroke-width="0.5" stroke-opacity="0.3"/>
 </svg>
