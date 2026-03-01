@@ -1,64 +1,56 @@
-# Lingo - Modern Language Learning Platform
+# Lingo - Learn Languages
 
-A beautiful, Apple-inspired language learning web application with liquid glass UI design.
+A beautiful language learning app with a glass-like interface inspired by Apple's design.
 
-## Features
+## What it does
 
-- 🌍 **6 Languages** - Spanish, French, German, Italian, Portuguese, Japanese
-- 🎯 **Multiple Exercise Types**
-  - Translation (multiple choice)
-  - Sentence construction (word bank)
-  - Listening comprehension
-  - Fill in the blanks
-- 📊 **Progress Tracking**
-  - XP system
-  - Daily streaks
-  - Heart/life system
-  - Lesson progress
-- 🎨 **Liquid Glass UI**
-  - Apple-inspired design
-  - Glassmorphism effects
-  - Smooth animations
-  - Fully responsive
+Learn 6 different languages through interactive exercises:
+- Spanish, French, German, Italian, Portuguese, Japanese
 
-## Quick Start
+Practice with different exercise types:
+- Multiple choice translation
+- Build sentences from word banks
+- Type what you hear
+- Fill in the blanks
 
+Track your progress:
+- Experience points for correct answers
+- Daily streak counter
+- Lives system to keep you focused
+- Lesson progress tracking
+
+## How to use it
+
+Open the file in your browser:
 ```bash
-# Clone the repository
-git clone https://github.com/nulljosh/lingo.git
-
-# Open in browser
 open index.html
-
-# Or serve locally
-python -m http.server 8000
-# Visit http://localhost:8000
 ```
 
-## Tech Stack
+Or serve it locally:
+```bash
+python -m http.server 8000
+# Then visit http://localhost:8000
+```
 
-- Pure HTML/CSS/JavaScript (no dependencies)
-- LocalStorage for progress persistence
-- CSS Grid & Flexbox for layouts
-- Modern CSS features (backdrop-filter, gradients)
+## How it's built
 
-## Project Structure
+Everything is in a single HTML file - no build steps or dependencies needed. Just HTML, CSS, and JavaScript.
+
+The interface uses modern CSS features like backdrop filters and gradients to create the glass effect. Progress saves locally in your browser.
+
+## Project structure
 
 ```
 lingo/
-├── index.html          # Main application
-├── README.md          # Documentation
-├── CLAUDE.md          # AI assistant context
-└── .gitignore         # Git ignore file
+├── index.html    # The entire app
+├── README.md     # This file
+├── CLAUDE.md     # Technical notes
+└── .gitignore    # Git config
 ```
 
-## Development
+## Adding languages
 
-The entire app is contained in a single `index.html` file for simplicity. All styles are embedded for easy customization and zero build process.
-
-### Adding New Languages
-
-Add language data to the `questions` object:
+Add new language lessons to the `questions` object in the JavaScript:
 
 ```javascript
 const questions = {
@@ -73,27 +65,14 @@ const questions = {
 }
 ```
 
-### Customizing Themes
+## Browser support
 
-Modify CSS variables in the `:root` selector for easy theme changes.
-
-## Browser Support
-
-- Chrome 90+
-- Safari 15+
-- Firefox 90+
-- Edge 90+
-
-Requires support for:
-- CSS backdrop-filter
-- CSS Grid
-- LocalStorage
-- ES6 JavaScript
+Works in modern browsers (Chrome, Safari, Firefox, Edge) from the last few years. Needs support for CSS backdrop filters and modern JavaScript.
 
 ## License
 
-MIT License - Feel free to use for any purpose.
+MIT - Use it however you want.
 
-## Credits
+## Author
 
 Built by Joshua Trommel as a modern take on language learning interfaces.
