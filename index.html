@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Lingua - Learn Languages</title>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --blur-amount: 20px;
+            --success: #4caf50;
+            --error: #f44336;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            --spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        .orb1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.8), transparent);
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(240, 147, 251, 0.8), transparent);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -7s;
+        }
+
+        .orb3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(118, 75, 162, 0.8), transparent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Glass header */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: env(safe-area-inset-top, 20px) 2rem 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            position: sticky;
+            top: 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Main container */
+        .container {
+            flex: 1;
+            max-width: 900px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        /* Glass card base */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Language selection */
+        .language-selection h2 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .language-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .language-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .language-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.25);
+        }
+
+        .language-card:hover::before {
+            opacity: 1;
+        }
+
+        .language-card.selected {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(255, 255, 255, 0.2);
+        }
+
+        .language-flag {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .language-name {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        /* Lesson container */
+        .lesson-container {
+            display: none;
+        }
+
+        .lesson-container.active {
+            display: block;
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Progress bar */
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Question styles */
+        .question-container {
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .question-type {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .question-text {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        /* Translation input */
+        .translation-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .translation-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .translation-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Choice buttons */
+        .choices-container {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .choice-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s ease, height 0.5s ease;
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 20px rgba(31, 38, 135, 0.2);
+        }
+
+        .choice-btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .choice-btn.selected {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(0.98);
+        }
+
+        .choice-btn.correct {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+            animation: success 0.5s var(--spring);
+        }
+
+        .choice-btn.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: rgba(244, 67, 54, 0.5);
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Word bank */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            min-height: 80px;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .word-chip {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            user-select: none;
+        }
+
+        .word-chip:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(31, 38, 135, 0.2);
+        }
+
+        .word-chip.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: scale(0.9);
+        }
+
+        .answer-box {
+            min-height: 80px;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .answer-box .word-chip {
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(31, 38, 135, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            border: none;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .skip-btn {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Feedback */
+        .feedback {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: none;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+            color: white;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+            color: white;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        /* Result screen */
+        .result-container {
+            display: none;
+            text-align: center;
+            color: white;
+        }
+
+        .result-container.active {
+            display: block;
+            animation: zoomIn 0.5s var(--spring);
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .result-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+        }
+
+        .result-stat {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 640px) {
+            .header {
+                padding: env(safe-area-inset-top, 20px) 1rem 1rem 1rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .stats {
+                gap: 0.75rem;
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .question-text {
+                font-size: 1.5rem;
+            }
+
+            .result-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .language-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+
+        /* Reduce motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated background orbs -->
+    <div class="bg-orb orb1"></div>
+    <div class="bg-orb orb2"></div>
+    <div class="bg-orb orb3"></div>
+
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">🌍</div>
+            <span>Lingua</span>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-icon">🔥</span>
+                <span id="streak">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">⭐</span>
+                <span id="xp">0</span> XP
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">❤️</span>
+                <span id="hearts">5</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Language Selection -->
+        <div class="glass-card language-selection" id="languageSelection">
+            <h2>Choose your language</h2>
+            <div class="language-grid">
+                <div class="language-card" data-lang="spanish">
+                    <div class="language-flag">🇪🇸</div>
+                    <div class="language-name">Spanish</div>
+                </div>
+                <div class="language-card" data-lang="french">
+                    <div class="language-flag">🇫🇷</div>
+                    <div class="language-name">French</div>
+                </div>
+                <div class="language-card" data-lang="german">
+                    <div class="language-flag">🇩🇪</div>
+                    <div class="language-name">German</div>
+                </div>
+                <div class="language-card" data-lang="italian">
+                    <div class="language-flag">🇮🇹</div>
+                    <div class="language-name">Italian</div>
+                </div>
+                <div class="language-card" data-lang="portuguese">
+                    <div class="language-flag">🇵🇹</div>
+                    <div class="language-name">Portuguese</div>
+                </div>
+                <div class="language-card" data-lang="japanese">
+                    <div class="language-flag">🇯🇵</div>
+                    <div class="language-name">Japanese</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lesson Container -->
+        <div class="lesson-container" id="lessonContainer">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="question-container" id="questionContainer">
+                    <!-- Question content will be inserted here -->
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+
+                <div class="btn-container">
+                    <button class="btn skip-btn" id="skipBtn">Skip</button>
+                    <button class="btn btn-primary" id="checkBtn">Check</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Container -->
+        <div class="glass-card result-container" id="resultContainer">
+            <div class="result-icon">🏆</div>
+            <h2 class="result-title">Lesson Complete!</h2>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <div class="result-stat-value" id="correctCount">0</div>
+                    <div class="result-stat-label">Correct</div>
+                </div>
+                <div class="result-stat">
+                    <div class="result-stat-value" id="xpEarned">0</div>
+                    <div class="result-stat-label">XP Earned</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="continueBtn" style="margin-top: 2rem;">Continue Learning</button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            selectedLanguage: null,
+            currentQuestion: 0,
+            totalQuestions: 10,
+            correctAnswers: 0,
+            xp: parseInt(localStorage.getItem('xp') || 0),
+            streak: parseInt(localStorage.getItem('streak') || 0),
+            hearts: 5,
+            currentAnswer: null,
+            answerWords: []
+        };
+
+        // Question Database
+        const questions = {
+            spanish: [
+                {
+                    type: 'translation',
+                    question: 'Hello',
+                    answer: 'Hola',
+                    choices: ['Hola', 'Adiós', 'Por favor', 'Gracias']
+                },
+                {
+                    type: 'translation',
+                    question: 'Thank you',
+                    answer: 'Gracias',
+                    choices: ['Hola', 'Gracias', 'De nada', 'Por favor']
+                },
+                {
+                    type: 'sentence',
+                    question: 'The cat is small',
+                    answer: 'El gato es pequeño',
+                    words: ['El', 'gato', 'es', 'pequeño', 'grande', 'perro']
+                },
+                {
+                    type: 'translation',
+                    question: 'Water',
+                    answer: 'Agua',
+                    choices: ['Agua', 'Fuego', 'Tierra', 'Aire']
+                },
+                {
+                    type: 'sentence',
+                    question: 'I like coffee',
+                    answer: 'Me gusta el café',
+                    words: ['Me', 'gusta', 'el', 'café', 'té', 'no']
+                },
+                {
+                    type: 'translation',
+                    question: 'Good morning',
+                    answer: 'Buenos días',
+                    choices: ['Buenos días', 'Buenas noches', 'Buenas tardes', 'Hasta luego']
+                },
+                {
+                    type: 'listening',
+                    question: 'Type what you hear',
+                    answer: 'La casa es grande',
+                    audio: 'La casa es grande'
+                },
+                {
+                    type: 'sentence',
+                    question: 'She reads a book',
+                    answer: 'Ella lee un libro',
+                    words: ['Ella', 'lee', 'un', 'libro', 'él', 'come']
+                },
+                {
+                    type: 'translation',
+                    question: 'Friend',
+                    answer: 'Amigo',
+                    choices: ['Amigo', 'Enemigo', 'Familia', 'Casa']
+                },
+                {
+                    type: 'sentence',
+                    question: 'We eat pizza',
+                    answer: 'Nosotros comemos pizza',
+                    words: ['Nosotros', 'comemos', 'pizza', 'ellos', 'beben', 'pasta']
+                }
+            ],
+            french: [
+                {
+                    type: 'translation',
+                    question: 'Hello',
+                    answer: 'Bonjour',
+                    choices: ['Bonjour', 'Au revoir', 'Merci', 'Bonsoir']
+                },
+                {
+                    type: 'translation',
+                    question: 'Thank you',
+                    answer: 'Merci',
+                    choices: ['Merci', 'De rien', 'Bonjour', 'Bonne nuit']
+                },
+                {
+                    type: 'sentence',
+                    question: 'The cat is small',
+                    answer: 'Le chat est petit',
+                    words: ['Le', 'chat', 'est', 'petit', 'grand', 'chien']
+                },
+                {
+                    type: 'translation',
+                    question: 'Water',
+                    answer: 'Eau',
+                    choices: ['Eau', 'Feu', 'Terre', 'Air']
+                },
+                {
+                    type: 'sentence',
+                    question: 'I like coffee',
+                    answer: "J'aime le café",
+                    words: ["J'aime", 'le', 'café', 'thé', 'ne', 'pas']
+                },
+                {
+                    type: 'translation',
+                    question: 'Good night',
+                    answer: 'Bonne nuit',
+                    choices: ['Bonne nuit', 'Bonjour', 'Bonsoir', 'À bientôt']
+                },
+                {
+                    type: 'listening',
+                    question: 'Type what you hear',
+                    answer: 'Je mange une pomme',
+                    audio: 'Je mange une pomme'
+                },
+                {
+                    type: 'sentence',
+                    question: 'She speaks French',
+                    answer: 'Elle parle français',
+                    words: ['Elle', 'parle', 'français', 'il', 'anglais', 'espagnol']
+                },
+                {
+                    type: 'translation',
+                    question: 'Book',
+                    answer: 'Livre',
+                    choices: ['Livre', 'Cahier', 'Stylo', 'Table']
+                },
+                {
+                    type: 'sentence',
+                    question: 'We go to school',
+                    answer: "Nous allons à l'école",
+                    words: ['Nous', 'allons', 'à', "l'école", 'la', 'maison']
+                }
+            ],
+            german: [
+                {
+                    type: 'translation',
+                    question: 'Hello',
+                    answer: 'Hallo',
+                    choices: ['Hallo', 'Tschüss', 'Danke', 'Guten Tag']
+                },
+                {
+                    type: 'translation',
+                    question: 'Thank you',
+                    answer: 'Danke',
+                    choices: ['Danke', 'Bitte', 'Hallo', 'Auf Wiedersehen']
+                },
+                {
+                    type: 'sentence',
+                    question: 'The cat is small',
+                    answer: 'Die Katze ist klein',
+                    words: ['Die', 'Katze', 'ist', 'klein', 'groß', 'Hund']
+                },
+                {
+                    type: 'translation',
+                    question: 'Water',
+                    answer: 'Wasser',
+                    choices: ['Wasser', 'Feuer', 'Erde', 'Luft']
+                },
+                {
+                    type: 'sentence',
+                    question: 'I drink coffee',
+                    answer: 'Ich trinke Kaffee',
+                    words: ['Ich', 'trinke', 'Kaffee', 'Tee', 'du', 'esse']
+                }
+            ],
+            italian: [
+                {
+                    type: 'translation',
+                    question: 'Hello',
+                    answer: 'Ciao',
+                    choices: ['Ciao', 'Arrivederci', 'Grazie', 'Buongiorno']
+                },
+                {
+                    type: 'translation',
+                    question: 'Thank you',
+                    answer: 'Grazie',
+                    choices: ['Grazie', 'Prego', 'Ciao', 'Buona notte']
+                },
+                {
+                    type: 'sentence',
+                    question: 'I eat pasta',
+                    answer: 'Io mangio pasta',
+                    words: ['Io', 'mangio', 'pasta', 'pizza', 'bevo', 'tu']
+                },
+                {
+                    type: 'translation',
+                    question: 'Coffee',
+                    answer: 'Caffè',
+                    choices: ['Caffè', 'Tè', 'Acqua', 'Vino']
+                },
+                {
+                    type: 'translation',
+                    question: 'Beautiful',
+                    answer: 'Bello',
+                    choices: ['Bello', 'Brutto', 'Grande', 'Piccolo']
+                }
+            ],
+            portuguese: [
+                {
+                    type: 'translation',
+                    question: 'Hello',
+                    answer: 'Olá',
+                    choices: ['Olá', 'Tchau', 'Obrigado', 'Bom dia']
+                },
+                {
+                    type: 'translation',
+                    question: 'Thank you',
+                    answer: 'Obrigado',
+                    choices: ['Obrigado', 'De nada', 'Olá', 'Boa noite']
+                },
+                {
+                    type: 'sentence',
+                    question: 'I speak Portuguese',
+                    answer: 'Eu falo português',
+                    words: ['Eu', 'falo', 'português', 'inglês', 'você', 'come']
+                },
+                {
+                    type: 'translation',
+                    question: 'Beach',
+                    answer: 'Praia',
+                    choices: ['Praia', 'Montanha', 'Rio', 'Cidade']
+                },
+                {
+                    type: 'translation',
+                    question: 'Love',
+                    answer: 'Amor',
+                    choices: ['Amor', 'Ódio', 'Amizade', 'Paz']
+                }
+            ],
+            japanese: [
+                {
+                    type: 'translation',
+                    question: 'Hello',
+                    answer: 'こんにちは',
+                    choices: ['こんにちは', 'さようなら', 'ありがとう', 'おはよう']
+                },
+                {
+                    type: 'translation',
+                    question: 'Thank you',
+                    answer: 'ありがとう',
+                    choices: ['ありがとう', 'どういたしまして', 'こんにちは', 'おやすみ']
+                },
+                {
+                    type: 'sentence',
+                    question: 'I eat sushi',
+                    answer: '私は寿司を食べます',
+                    words: ['私は', '寿司を', '食べます', 'ラーメンを', '飲みます', 'あなたは']
+                },
+                {
+                    type: 'translation',
+                    question: 'Cat',
+                    answer: '猫',
+                    choices: ['猫', '犬', '鳥', '魚']
+                },
+                {
+                    type: 'translation',
+                    question: 'Beautiful',
+                    answer: '美しい',
+                    choices: ['美しい', '醜い', '大きい', '小さい']
+                }
+            ]
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            setupEventListeners();
+            
+            // Check and update streak
+            const lastPlayed = localStorage.getItem('lastPlayed');
+            const today = new Date().toDateString();
+            
+            if (lastPlayed) {
+                const lastDate = new Date(lastPlayed);
+                const todayDate = new Date(today);
+                const dayDiff = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+                
+                if (dayDiff > 1) {
+                    // Reset streak if more than 1 day gap
+                    gameState.streak = 0;
+                    localStorage.setItem('streak', 0);
+                }
+            }
+        });
+
+        function setupEventListeners() {
+            // Language selection
+            document.querySelectorAll('.language-card').forEach(card => {
+                card.addEventListener('click', () => selectLanguage(card));
+            });
+
+            // Check button
+            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+
+            // Skip button
+            document.getElementById('skipBtn').addEventListener('click', skipQuestion);
+
+            // Continue button
+            document.getElementById('continueBtn').addEventListener('click', continueLearning);
+        }
+
+        function selectLanguage(card) {
+            // Remove previous selection
+            document.querySelectorAll('.language-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+
+            // Add selection
+            card.classList.add('selected');
+            gameState.selectedLanguage = card.dataset.lang;
+
+            // Start lesson after a short delay
+            setTimeout(() => startLesson(), 300);
+        }
+
+        function startLesson() {
+            // Hide language selection
+            document.getElementById('languageSelection').parentElement.style.display = 'none';
+            
+            // Show lesson container
+            document.getElementById('lessonContainer').classList.add('active');
+
+            // Reset game state
+            gameState.currentQuestion = 0;
+            gameState.correctAnswers = 0;
+            gameState.hearts = 5;
+
+            // Update hearts display
+            updateStats();
+
+            // Load first question
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const langQuestions = questions[gameState.selectedLanguage] || questions.spanish;
+            const question = langQuestions[gameState.currentQuestion % langQuestions.length];
+
+            // Update progress bar
+            const progress = ((gameState.currentQuestion) / gameState.totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Clear feedback
+            document.getElementById('feedback').classList.remove('show');
+
+            // Reset answer state
+            gameState.currentAnswer = null;
+            gameState.answerWords = [];
+
+            // Reset check button
+            document.getElementById('checkBtn').textContent = 'Check';
+            document.getElementById('checkBtn').onclick = checkAnswer;
+            document.getElementById('checkBtn').disabled = false;
+
+            // Render question based on type
+            renderQuestion(question);
+        }
+
+        function renderQuestion(question) {
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = '';
+
+            if (question.type === 'translation') {
+                container.innerHTML = `
+                    <div class="question-type">Select the correct translation</div>
+                    <div class="question-text">${question.question}</div>
+                    <div class="choices-container">
+                        ${question.choices.map(choice => `
+                            <button class="choice-btn" data-choice="${choice}">${choice}</button>
+                        `).join('')}
+                    </div>
+                `;
+
+                // Add click handlers
+                container.querySelectorAll('.choice-btn').forEach(btn => {
+                    btn.addEventListener('click', () => selectChoice(btn));
+                });
+            } else if (question.type === 'sentence') {
+                container.innerHTML = `
+                    <div class="question-type">Translate this sentence</div>
+                    <div class="question-text">${question.question}</div>
+                    <div class="answer-box" id="answerBox"></div>
+                    <div class="word-bank">
+                        ${question.words.map(word => `
+                            <div class="word-chip" data-word="${word}">${word}</div>
+                        `).join('')}
+                    </div>
+                `;
+
+                // Add click handlers for word chips
+                container.querySelectorAll('.word-chip').forEach(chip => {
+                    chip.addEventListener('click', () => toggleWord(chip));
+                });
+            } else if (question.type === 'listening') {
+                container.innerHTML = `
+                    <div class="question-type">Type what you hear</div>
+                    <div class="question-text">🔊 <em>${question.audio}</em></div>
+                    <input type="text" class="translation-input" id="listeningInput" placeholder="Type your answer here...">
+                `;
+
+                // Focus input
+                setTimeout(() => {
+                    document.getElementById('listeningInput')?.focus();
+                }, 100);
+            }
+
+            // Store current question for answer checking
+            gameState.currentQuestionData = question;
+        }
+
+        function selectChoice(btn) {
+            // Clear previous selection
+            document.querySelectorAll('.choice-btn').forEach(b => {
+                b.classList.remove('selected');
+            });
+
+            // Mark selected
+            btn.classList.add('selected');
+            gameState.currentAnswer = btn.dataset.choice;
+        }
+
+        function toggleWord(chip) {
+            const word = chip.dataset.word;
+            const answerBox = document.getElementById('answerBox');
+
+            if (chip.classList.contains('used')) {
+                // Remove from answer
+                chip.classList.remove('used');
+                gameState.answerWords = gameState.answerWords.filter(w => w !== word);
+            } else {
+                // Add to answer
+                chip.classList.add('used');
+                gameState.answerWords.push(word);
+            }
+
+            // Update answer box
+            answerBox.innerHTML = gameState.answerWords.map(w => 
+                `<div class="word-chip">${w}</div>`
+            ).join('');
+
+            // Update current answer
+            gameState.currentAnswer = gameState.answerWords.join(' ');
+        }
+
+        function checkAnswer() {
+            const question = gameState.currentQuestionData;
+            let isCorrect = false;
+
+            if (question.type === 'translation') {
+                isCorrect = gameState.currentAnswer === question.answer;
+            } else if (question.type === 'sentence') {
+                isCorrect = gameState.currentAnswer === question.answer;
+            } else if (question.type === 'listening') {
+                const input = document.getElementById('listeningInput')?.value.trim();
+                isCorrect = input?.toLowerCase() === question.answer.toLowerCase();
+                gameState.currentAnswer = input;
+            }
+
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            if (isCorrect) {
+                feedback.className = 'feedback correct show';
+                feedback.innerHTML = `✅ Correct! Well done!`;
+                gameState.correctAnswers++;
+                gameState.xp += 10;
+                localStorage.setItem('xp', gameState.xp);
+            } else {
+                feedback.className = 'feedback incorrect show';
+                feedback.innerHTML = `❌ The correct answer is: <strong>${question.answer}</strong>`;
+                gameState.hearts--;
+            }
+
+            // Update stats
+            updateStats();
+
+            // Disable check button and change to continue
+            document.getElementById('checkBtn').textContent = 'Continue';
+            document.getElementById('checkBtn').onclick = nextQuestion;
+
+            // Visual feedback for choices
+            if (question.type === 'translation') {
+                document.querySelectorAll('.choice-btn').forEach(btn => {
+                    btn.style.pointerEvents = 'none';
+                    if (btn.dataset.choice === question.answer) {
+                        btn.classList.add('correct');
+                    } else if (btn.classList.contains('selected') && btn.dataset.choice !== question.answer) {
+                        btn.classList.add('incorrect');
+                    }
+                });
+            }
+
+            // Check if game over
+            if (gameState.hearts <= 0) {
+                setTimeout(() => showResults(), 1500);
+            }
+        }
+
+        function skipQuestion() {
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            gameState.currentQuestion++;
+
+            if (gameState.currentQuestion >= gameState.totalQuestions || gameState.hearts <= 0) {
+                showResults();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            // Hide lesson container
+            document.getElementById('lessonContainer').classList.remove('active');
+
+            // Show results
+            document.getElementById('resultContainer').classList.add('active');
+
+            // Update result stats
+            document.getElementById('correctCount').textContent = gameState.correctAnswers;
+            document.getElementById('xpEarned').textContent = gameState.correctAnswers * 10;
+
+            // Update streak
+            const today = new Date().toDateString();
+            const lastPlayed = localStorage.getItem('lastPlayed');
+            
+            if (lastPlayed !== today) {
+                gameState.streak++;
+                localStorage.setItem('streak', gameState.streak);
+                localStorage.setItem('lastPlayed', today);
+            }
+        }
+
+        function continueLearning() {
+            // Reset and go back to language selection
+            document.getElementById('resultContainer').classList.remove('active');
+            document.getElementById('languageSelection').parentElement.style.display = 'block';
+            
+            // Reset selection
+            document.querySelectorAll('.language-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Reset lesson container
+            document.getElementById('lessonContainer').classList.remove('active');
+        }
+
+        function updateStats() {
+            document.getElementById('xp').textContent = gameState.xp;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('hearts').textContent = gameState.hearts;
+        }
+    </script>
+</body>
+</html>
