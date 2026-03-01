@@ -1,22 +1,11 @@
-# 🎓 Lingo - Learn Anything
+# Lingo
+
+<img src="icon.svg" width="128" height="128" align="right">
+
 
 A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
 
 ![Lingo Architecture](./project-map.svg)
-
-
-## Grade: A+
-
-**Strengths:**
-- Clean, modern liquid glass UI with smooth animations
-- 40+ topics across 5 categories (Languages, Programming, Math, Science, Skills)
-- 300+ questions with multiple exercise types
-- Progress tracking with XP, streaks, and hearts
-- Zero dependencies - pure HTML/CSS/JavaScript
-- Modular architecture (HTML + data + app separation)
-- Fully responsive design
-
-**Production Ready:** Yes - can be deployed immediately
 
 ## What it does
 
@@ -26,9 +15,9 @@ Learn languages, programming, math, science, and more through interactive exerci
 
 **Programming (7):** JavaScript, Python, Rust, C++, Java, Go, SQL
 
-**Math (8):** Arithmetic, Algebra, Geometry, Trigonometry, Calculus, Statistics, Linear Algebra, Logic
+**Math (10):** Arithmetic, Algebra, Geometry, Trigonometry, Pre-Calculus 11/12, Calculus, Statistics, Linear Algebra, Logic
 
-**Science (4):** Physics, Chemistry, Biology, Astronomy
+**Science (5):** Physics, Chemistry, Biology, Anatomy & Physiology, Astronomy
 
 **Skills (5+):** Chess, Music Theory, Music History, World History, Geography
 
@@ -40,6 +29,7 @@ Learn languages, programming, math, science, and more through interactive exerci
 - Beautiful glassmorphism effects with animated backgrounds
 - Instant feedback with visual animations
 - Progress persistence via localStorage
+- 40+ topics, 330+ questions
 
 ## Quick Start
 
@@ -63,8 +53,9 @@ lingo/
 ├── index.html      # Main application UI
 ├── lingo-data.js   # Questions and categories database
 ├── lingo-app.js    # Application logic
-├── README.md       # Documentation
-└── CLAUDE.md       # Technical notes
+├── icon.svg        # Project icon
+├── project-map.svg # Architecture diagram
+└── README.md       # Documentation
 ```
 
 ## Adding Content
@@ -99,8 +90,8 @@ Works in modern browsers (2020+) with support for:
 
 ## License
 
-MIT - Use it however you want.
+MIT
 
 ---
 
-Built by Joshua Trommel as a modern, comprehensive learning platform.
+Built by Joshua Trommel
