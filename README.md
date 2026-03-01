@@ -1,4 +1,4 @@
-# Lingua - Modern Language Learning Platform
+# Lingo - Modern Language Learning Platform
 
 A beautiful, Apple-inspired language learning web application with liquid glass UI design.
 
@@ -25,7 +25,7 @@ A beautiful, Apple-inspired language learning web application with liquid glass 
 
 ```bash
 # Clone the repository
-git clone https://github.com/nulljosh/lingua.git
+git clone https://github.com/nulljosh/lingo.git
 
 # Open in browser
 open index.html
@@ -45,7 +45,7 @@ python -m http.server 8000
 ## Project Structure
 
 ```
-lingua/
+lingo/
 ├── index.html          # Main application
 ├── README.md          # Documentation
 ├── CLAUDE.md          # AI assistant context

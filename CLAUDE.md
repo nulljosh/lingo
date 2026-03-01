@@ -1,4 +1,4 @@
-# CLAUDE.md - Lingua Language Learning Platform
+# CLAUDE.md - Lingo Language Learning Platform
 
 ## Overview
 Modern language learning web app with Apple-inspired liquid glass UI. Single-file architecture for simplicity.
