@@ -5,7 +5,7 @@
 
 A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
 
-![Lingo Architecture](./project-map.svg)
+![Lingo Architecture](project-map.svg)
 
 ## What it does
 
