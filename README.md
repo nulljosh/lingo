@@ -4,7 +4,7 @@
 
 A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
 
-**[Live Site](https://heyitsmejosh.com/lingo/)**
+**[Live Site](https://lingo.heyitsmejosh.com)**
 
 ## What it does
 
@@ -38,7 +38,7 @@ cd lingo
 open index.html
 ```
 
-Or visit the [live site](https://heyitsmejosh.com/lingo/) directly.
+Or visit the [live site](https://lingo.heyitsmejosh.com) directly.
 
 ## Project Structure
 
@@ -74,7 +74,7 @@ questions.newTopic = [
 - Pure HTML/CSS/JavaScript (no build process)
 - CSS glassmorphism with backdrop filters
 - LocalStorage for progress persistence
-- GitHub Pages deployment (zero config)
+- Vercel deployment
 
 ## Browser Support
 
