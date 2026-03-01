@@ -2,6 +2,9 @@
 
 A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
 
+![Lingo Architecture](./project-map.svg)
+
+
 ## Grade: A+
 
 **Strengths:**
