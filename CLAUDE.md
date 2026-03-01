@@ -4,10 +4,18 @@
 Modern language learning web app with Apple-inspired liquid glass UI. Single-file architecture for simplicity.
 
 ## Architecture Decisions
-- **Single HTML file**: Zero build process, instant deployment
+- **Single HTML file + JS modules**: Zero build process, GitHub Pages deployment
 - **No frameworks**: Pure vanilla JS for maximum performance
 - **LocalStorage**: Client-side progress persistence
 - **Liquid Glass UI**: Modern glassmorphism with Apple design language
+
+## Project Structure
+```
+index.html        # Entry point (HTML + CSS)
+js/lingo-app.js   # Application logic
+js/lingo-data.js  # Questions database
+assets/icon.svg   # Project icon
+```
 
 ## Key Features to Maintain
 1. **Visual hierarchy** - Blur/transparency layers create depth

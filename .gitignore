@@ -6,3 +6,6 @@ node_modules/
 *.swp
 *.swo
 *~
+*.backup
+*-old.*
+*-backup.*

@@ -1,11 +1,10 @@
 # Lingo
 
-<img src="icon.svg" width="128" height="128" align="right">
-
+<img src="assets/icon.svg" width="128" height="128" align="right">
 
 A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
 
-![Lingo Architecture](project-map.svg)
+**[Live Site](https://nulljosh.github.io/lingo/)**
 
 ## What it does
 
@@ -34,33 +33,30 @@ Learn languages, programming, math, science, and more through interactive exerci
 ## Quick Start
 
 ```bash
-# Clone the repository
 git clone https://github.com/nulljosh/lingo.git
 cd lingo
-
-# Open in browser
 open index.html
-
-# Or serve locally
-python -m http.server 8000
-# Visit http://localhost:8000
 ```
+
+Or visit the [live site](https://nulljosh.github.io/lingo/) directly.
 
 ## Project Structure
 
 ```
 lingo/
-├── index.html      # Main application UI
-├── lingo-data.js   # Questions and categories database
-├── lingo-app.js    # Application logic
-├── icon.svg        # Project icon
-├── project-map.svg # Architecture diagram
-└── README.md       # Documentation
+├── index.html        # Main application (HTML + CSS)
+├── js/
+│   ├── lingo-app.js  # Application logic
+│   └── lingo-data.js # Questions and categories database
+├── assets/
+│   └── icon.svg      # Project icon
+├── README.md
+└── CLAUDE.md
 ```
 
 ## Adding Content
 
-Add new questions to `lingo-data.js`:
+Add new questions to `js/lingo-data.js`:
 
 ```javascript
 questions.newTopic = [
@@ -76,9 +72,9 @@ questions.newTopic = [
 ## Tech Stack
 
 - Pure HTML/CSS/JavaScript (no build process)
-- CSS Glass morphism with backdrop filters
+- CSS glassmorphism with backdrop filters
 - LocalStorage for progress persistence
-- Modular architecture for easy expansion
+- GitHub Pages deployment (zero config)
 
 ## Browser Support
 
