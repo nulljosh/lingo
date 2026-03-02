@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Lingo - Learn Anything</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -343,7 +347,6 @@
             border-radius: var(--radius-md);
             color: var(--text-primary);
             transition: border-color 0.2s var(--ease);
-            outline: none;
         }
 
         .math-input {
@@ -619,41 +622,297 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* Screen reader only */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus visible */
+        *:focus-visible {
+            outline: 2px solid var(--text-primary);
+            outline-offset: 2px;
+        }
+
+        .choice-btn:focus-visible,
+        .word-chip:focus-visible,
+        .subject-card:focus-visible {
+            outline-offset: -2px;
+        }
+
+        .math-input:focus-visible,
+        .translation-input:focus-visible {
+            border-color: var(--border-active);
+            outline: none;
+        }
+
+        /* Achievement Toast */
+        .achievement-toast {
+            position: fixed;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--success-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: top 0.3s var(--spring);
+            max-width: 90vw;
+        }
+
+        .achievement-toast.show {
+            top: calc(env(safe-area-inset-top, 0px) + 80px);
+        }
+
+        .achievement-toast-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--success);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .achievement-toast-title {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .achievement-toast-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Achievement Panel */
+        .achievement-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--bg-primary);
+            border-left: 1px solid var(--border);
+            z-index: 200;
+            transition: right 0.3s var(--ease);
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .achievement-panel.active {
+            right: 0;
+        }
+
+        .achievement-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .achievement-panel-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .achievement-close {
+            border: none !important;
+            padding: 0.5rem !important;
+        }
+
+        .achievement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: all 0.2s var(--ease);
+        }
+
+        .achievement-item.locked {
+            opacity: 0.4;
+        }
+
+        .achievement-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .achievement-item.unlocked .achievement-icon {
+            background: var(--success-bg);
+            border-color: var(--success-border);
+            color: var(--success);
+        }
+
+        .achievement-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .achievement-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-check {
+            color: var(--success);
+            font-size: 0.875rem;
+        }
+
+        /* Mic Button */
+        .mic-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s var(--ease);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .mic-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .mic-btn.listening {
+            background: var(--error-bg);
+            border-color: var(--error-border);
+            color: var(--error);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Review Badge */
+        .review-badge {
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: var(--success);
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            padding: 0.125rem 0.5rem;
+            border-radius: var(--radius-pill);
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+        }
+
+        /* Ripple */
+        .btn, .choice-btn, .subject-card, .word-chip {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            width: 100px;
+            height: 100px;
+            margin-left: -50px;
+            margin-top: -50px;
+            animation: rippleEffect 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes rippleEffect {
+            from { transform: scale(0); opacity: 1; }
+            to { transform: scale(4); opacity: 0; }
+        }
     </style>
 </head>
 <body>
-    <header class="header">
+    <header class="header" role="banner">
         <div class="header-inner">
-            <div class="logo" onclick="resetToHome()">
+            <div class="logo" onclick="resetToHome()" role="button" tabindex="0" aria-label="Go to home screen">
                 <a href="https://heyitsmejosh.com" style="color:var(--text-muted);text-decoration:none;font-size:0.8125rem;transition:color 0.2s;">jt</a>
-                <span style="color:var(--text-muted);font-size:0.75rem;">/</span>
+                <span style="color:var(--text-muted);font-size:0.75rem;" aria-hidden="true">/</span>
                 <span>Lingo</span>
             </div>
             <div class="stats">
-                <div class="stat-item stat-streak">
-                    <i class="fa-solid fa-fire"></i>
+                <div class="stat-item stat-streak" aria-label="Day streak">
+                    <i class="fa-solid fa-fire" aria-hidden="true"></i>
                     <span class="stat-val" id="streak">0</span>
                 </div>
-                <div class="stat-item stat-xp">
-                    <i class="fa-solid fa-star"></i>
+                <div class="stat-item stat-xp" aria-label="Experience points">
+                    <i class="fa-solid fa-star" aria-hidden="true"></i>
                     <span class="stat-val" id="xp">0</span>
                 </div>
-                <div class="stat-item stat-hearts">
-                    <i class="fa-solid fa-heart"></i>
+                <div class="stat-item stat-hearts" aria-label="Hearts remaining">
+                    <i class="fa-solid fa-heart" aria-hidden="true"></i>
                     <span class="stat-val" id="hearts">5</span>
+                </div>
+                <div class="stat-item" id="achievementBtn" role="button" tabindex="0" aria-label="View achievements" style="cursor:pointer;">
+                    <i class="fa-solid fa-trophy" aria-hidden="true"></i>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="container">
+    <div class="container" role="main">
         <div class="subject-selection" id="subjectSelection">
-            <div class="category-tabs">
-                <div class="category-tab active" data-category="languages">Languages</div>
-                <div class="category-tab" data-category="programming">Programming</div>
-                <div class="category-tab" data-category="math">Math</div>
-                <div class="category-tab" data-category="science">Science</div>
-                <div class="category-tab" data-category="skills">Skills</div>
+            <div class="category-tabs" role="navigation" aria-label="Subject categories">
+                <div class="category-tab active" data-category="languages" role="tab" tabindex="0" aria-selected="true">Languages</div>
+                <div class="category-tab" data-category="programming" role="tab" tabindex="0" aria-selected="false">Programming</div>
+                <div class="category-tab" data-category="math" role="tab" tabindex="0" aria-selected="false">Math</div>
+                <div class="category-tab" data-category="science" role="tab" tabindex="0" aria-selected="false">Science</div>
+                <div class="category-tab" data-category="skills" role="tab" tabindex="0" aria-selected="false">Skills</div>
             </div>
 
             <div class="section-title" id="categoryTitle">Choose a language</div>
@@ -670,7 +929,7 @@
 
             <div class="question-card">
                 <div class="question-container" id="questionContainer"></div>
-                <div class="feedback" id="feedback"></div>
+                <div class="feedback" id="feedback" aria-live="polite" role="status"></div>
                 <div class="btn-container">
                     <button class="btn" id="skipBtn">Skip</button>
                     <button class="btn btn-primary" id="checkBtn">Check</button>
@@ -700,6 +959,8 @@
         </div>
     </div>
 
+    <div class="achievement-panel" id="achievementPanel" role="dialog" aria-label="Achievements"></div>
+
     <footer style="max-width:960px;margin:0 auto;padding:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text-muted);">
         <span>&copy; 2026 Joshua Trommel</span>
         <a href="https://github.com/nulljosh/lingo" style="color:var(--text-muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--text-secondary)'" onmouseout="this.style.color='var(--text-muted)'"><i class="fa-brands fa-github"></i> Source</a>
@@ -707,5 +968,10 @@
 
     <script src="js/lingo-data.js"></script>
     <script src="js/lingo-app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('js/sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>
