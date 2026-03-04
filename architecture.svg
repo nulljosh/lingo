@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" font-family="-apple-system, system-ui, sans-serif">
+  <defs>
+    <style>
+      .box { fill: #1a1a1a; stroke: #0071e3; stroke-width: 2; }
+      .label { fill: #e0e0e0; font-size: 13px; text-anchor: middle; }
+      .sub { fill: #888; font-size: 10px; text-anchor: middle; }
+      .arrow { stroke: #666; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="200" fill="#111"/>
+
+  <!-- Topic Selector -->
+  <rect x="20" y="70" width="130" height="50" rx="8" class="box"/>
+  <text x="85" y="92" class="label">Topic Selector</text>
+  <text x="85" y="108" class="sub">40+ topics</text>
+
+  <line x1="152" y1="95" x2="188" y2="95" class="arrow"/>
+
+  <!-- Content Loader -->
+  <rect x="190" y="70" width="130" height="50" rx="8" class="box"/>
+  <text x="255" y="92" class="label">Content Loader</text>
+  <text x="255" y="108" class="sub">JSON modules</text>
+
+  <line x1="322" y1="95" x2="358" y2="95" class="arrow"/>
+
+  <!-- Quiz Engine -->
+  <rect x="360" y="70" width="130" height="50" rx="8" class="box"/>
+  <text x="425" y="92" class="label">Quiz Engine</text>
+  <text x="425" y="108" class="sub">330+ questions</text>
+
+  <line x1="492" y1="95" x2="528" y2="95" class="arrow"/>
+
+  <!-- Progress Tracker -->
+  <rect x="530" y="70" width="130" height="50" rx="8" class="box"/>
+  <text x="595" y="92" class="label">Progress</text>
+  <text x="595" y="108" class="sub">scores + streaks</text>
+
+  <line x1="662" y1="95" x2="698" y2="95" class="arrow"/>
+
+  <!-- localStorage -->
+  <rect x="700" y="70" width="80" height="50" rx="8" class="box"/>
+  <text x="740" y="92" class="label">Storage</text>
+  <text x="740" y="108" class="sub">localStorage</text>
+</svg>
