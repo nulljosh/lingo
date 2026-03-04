@@ -1,10 +1,18 @@
+<div align="center">
+
 # Lingo
 
-<img src="assets/icon.svg" width="128" height="128" align="right">
+<img src="assets/icon.svg" alt="Lingo" width="120" />
 
-A beautiful language and skill learning platform with Apple-inspired liquid glass UI.
+A language and skill learning platform with Apple-inspired liquid glass UI.
 
-**[Live Site](https://lingo.heyitsmejosh.com)**
+[lingo.heyitsmejosh.com](https://lingo.heyitsmejosh.com)
+
+</div>
+
+## Architecture
+
+![Architecture](architecture.svg)
 
 ## What it does
 
