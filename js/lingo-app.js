@@ -673,6 +673,7 @@ function checkAnswer() {
     }
 
     const feedback = document.getElementById('feedback');
+    const questionCard = document.querySelector('.question-card');
     if (isCorrect) {
         feedback.className = 'feedback correct show';
         feedback.textContent = 'Correct.';
@@ -680,11 +681,30 @@ function checkAnswer() {
         gameState.xp += 10;
         localStorage.setItem('xp', gameState.xp);
         vibrate(50);
+
+        // Bounce animation
+        questionCard.classList.add('correct-anim');
+        setTimeout(() => questionCard.classList.remove('correct-anim'), 600);
+
+        // XP float
+        const xpStat = document.querySelector('.stat-xp');
+        if (xpStat) {
+            xpStat.style.position = 'relative';
+            const floater = document.createElement('span');
+            floater.className = 'xp-float';
+            floater.textContent = '+10';
+            xpStat.appendChild(floater);
+            setTimeout(() => floater.remove(), 1000);
+        }
     } else {
         feedback.className = 'feedback incorrect show';
         feedback.innerHTML = `Incorrect. The answer is: <strong>${question.answer}</strong>`;
         gameState.hearts--;
         vibrate([50, 30, 50]);
+
+        // Shake animation
+        questionCard.classList.add('incorrect-anim');
+        setTimeout(() => questionCard.classList.remove('incorrect-anim'), 600);
     }
 
     updateStats();
@@ -710,6 +730,23 @@ function checkAnswer() {
 
 function vibrate(pattern) {
     if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+function spawnConfetti() {
+    const colors = ['#58CC02', '#CE82FF', '#FF4B4B', '#FFC800', '#1CB0F6'];
+    for (let i = 0; i < 30; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        piece.style.width = (Math.random() * 6 + 5) + 'px';
+        piece.style.height = (Math.random() * 6 + 5) + 'px';
+        piece.style.animationDelay = (Math.random() * 0.8) + 's';
+        piece.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 3000);
+    }
 }
 
 function skipQuestion() {
@@ -750,6 +787,9 @@ function showResults() {
         completed.push(gameState.selectedSubject);
         localStorage.setItem('completedSubjects', JSON.stringify(completed));
     }
+
+    // Confetti effect
+    spawnConfetti();
 
     // Perfect lesson check
     if (gameState.correctAnswers === gameState.totalQuestions) {
