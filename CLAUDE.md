@@ -11,10 +11,13 @@ Modern language learning web app with Apple-inspired liquid glass UI. Single-fil
 
 ## Project Structure
 ```
-index.html        # Entry point (HTML + CSS)
-js/lingo-app.js   # Application logic
-js/lingo-data.js  # Questions database
-assets/icon.svg   # Project icon
+index.html          # Entry point (HTML only, links external CSS)
+css/lingo.css       # All styles (extracted from inline)
+js/lingo-app.js     # Application logic
+js/lingo-data.js    # Questions database (39 subjects)
+js/sw.js            # Service worker (cache-first)
+assets/icon.svg     # Project icon
+manifest.json       # PWA manifest
 ```
 
 ## Key Features to Maintain
