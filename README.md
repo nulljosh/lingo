@@ -10,6 +10,10 @@ A language and skill learning platform with Apple-inspired liquid glass UI.
 
 </div>
 
+## Latest Update
+
+- March 6, 2026: BC curriculum labels for Pre-Calculus tracks were standardized to **BC Grade 12**.
+
 ## Architecture
 
 ![Architecture](architecture.svg)
