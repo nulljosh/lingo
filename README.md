@@ -2,7 +2,7 @@
 
 # Lingo
 
-<img src="assets/icon.svg" alt="Lingo" width="120" />
+<img src="icon.svg" alt="Lingo" width="120" />
 
 A language and skill learning platform with Apple-inspired liquid glass UI.
 
