@@ -848,8 +848,8 @@ Object.keys(questions).forEach(subject => {
 
 // Update categories to include BC curriculum
 categories.math.subjects.push(
-    { id: 'precalc11', name: 'Pre-Calculus 11', icon: 'fa-solid fa-book', level: 'BC Grade 11' },
-    { id: 'precalc12', name: 'Pre-Calculus 12', icon: 'fa-solid fa-book-open', level: 'BC Grade 11' }
+    { id: 'precalc11', name: 'Pre-Calculus 11', icon: 'fa-solid fa-book', level: 'BC Grade 12' },
+    { id: 'precalc12', name: 'Pre-Calculus 12', icon: 'fa-solid fa-book-open', level: 'BC Grade 12' }
 );
 
 categories.science.subjects.push(
