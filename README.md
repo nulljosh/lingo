@@ -10,6 +10,8 @@ A language and skill learning platform with Apple-inspired liquid glass UI.
 
 </div>
 
+![version](https://img.shields.io/badge/version-v0.1.0-blue)
+
 ## Latest Update
 
 - March 6, 2026: BC curriculum labels for Pre-Calculus tracks were standardized to **BC Grade 12**.
