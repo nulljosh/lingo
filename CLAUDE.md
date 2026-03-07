@@ -47,6 +47,8 @@ manifest.json       # PWA manifest
 - Success: Green (#4caf50)
 - Error: Red (#f44336)
 - Text: Dark gray (#1d1d1f) on light
+- **Dark mode**: Deep navy bg (#1a1a2e), muted card surfaces (#1e1e32), subtle borders (#2a2a3e)
+- Theme toggle in header, persists via localStorage, respects `prefers-color-scheme`
 
 ## Animation Timing
 - Micro: 150ms (hover states)

@@ -303,6 +303,7 @@ let gameState = {
 // ============ INITIALIZATION ============
 
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     updateStats();
     setupEventListeners();
     setupKeyboardNav();
@@ -311,6 +312,27 @@ document.addEventListener('DOMContentLoaded', () => {
     checkStreak();
     initSpeechRecognition();
 });
+
+function initTheme() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeColor(theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeColor(next);
+}
+
+function updateThemeColor(theme) {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#1a1a2e' : '#58CC02');
+}
 
 function setupEventListeners() {
     document.querySelectorAll('.category-tab').forEach(tab => {
@@ -327,6 +349,7 @@ function setupEventListeners() {
     document.getElementById('skipBtn').addEventListener('click', skipQuestion);
     document.getElementById('continueBtn').addEventListener('click', continueLearning);
     document.getElementById('achievementBtn').addEventListener('click', renderAchievementPanel);
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 }
 
 // ============ KEYBOARD NAVIGATION ============

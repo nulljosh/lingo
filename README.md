@@ -10,11 +10,11 @@ A language and skill learning platform with Apple-inspired liquid glass UI.
 
 </div>
 
-![version](https://img.shields.io/badge/version-v0.1.0-blue)
+![version](https://img.shields.io/badge/version-v0.2.0-blue)
 
 ## Latest Update
 
-- March 6, 2026: BC curriculum labels for Pre-Calculus tracks were standardized to **BC Grade 12**.
+- March 7, 2026: Dark mode with toggle button, respects system preference, persists via localStorage.
 
 ## Architecture
 
@@ -42,6 +42,7 @@ Learn languages, programming, math, science, and more through interactive exerci
 - Beautiful glassmorphism effects with animated backgrounds
 - Instant feedback with visual animations
 - Progress persistence via localStorage
+- Dark mode with system preference detection
 - 40+ topics, 330+ questions
 
 ## Quick Start
