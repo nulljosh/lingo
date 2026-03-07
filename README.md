@@ -105,3 +105,12 @@ MIT
 ---
 
 Built by Joshua Trommel
+
+## Roadmap
+
+- [ ] Spaced repetition algorithm
+- [ ] Audio pronunciation
+- [ ] Leaderboard system
+- [ ] Offline mode (service worker)
+- [ ] User accounts + cloud sync
+- [ ] Custom course builder
