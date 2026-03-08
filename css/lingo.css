@@ -185,12 +185,6 @@ body {
     border-bottom: 2px solid var(--border);
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-    transition: scrollbar-color 0.3s ease;
-}
-
-.category-tabs:hover,
-.category-tabs:active {
     scrollbar-color: var(--text-muted) transparent;
 }
 
@@ -203,14 +197,8 @@ body {
 }
 
 .category-tabs::-webkit-scrollbar-thumb {
-    background: transparent;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-}
-
-.category-tabs:hover::-webkit-scrollbar-thumb,
-.category-tabs:active::-webkit-scrollbar-thumb {
     background: var(--text-muted);
+    border-radius: 4px;
 }
 
 .category-tab {
