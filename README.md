@@ -10,7 +10,7 @@ A language and skill learning platform with Apple-inspired liquid glass UI.
 
 </div>
 
-![version](https://img.shields.io/badge/version-v0.2.0-blue)
+![version](https://img.shields.io/badge/version-v0.3.0-blue)
 
 ## Latest Update
 
