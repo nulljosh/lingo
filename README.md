@@ -115,3 +115,9 @@ Built by Joshua Trommel
 - [ ] Offline mode (service worker)
 - [ ] User accounts + cloud sync
 - [ ] Custom course builder
+
+## Quick Commands
+- `./scripts/simplify.sh` - normalize project structure
+- `./scripts/monetize.sh . --write` - generate monetization plan (if available)
+- `./scripts/audit.sh .` - run fast project audit (if available)
+- `./scripts/ship.sh .` - run checks and ship (if available)

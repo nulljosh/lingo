@@ -75,3 +75,9 @@ manifest.json       # PWA manifest
 - Could extract to separate JSON file if grows large
 - Consider IndexedDB for larger datasets
 - WebAudio API for future pronunciation features
+
+## Quick Commands
+- `./scripts/simplify.sh`
+- `./scripts/monetize.sh . --write`
+- `./scripts/audit.sh .`
+- `./scripts/ship.sh .`
