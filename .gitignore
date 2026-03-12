@@ -10,3 +10,4 @@ node_modules/
 *-old.*
 *-backup.*
 .vercel
+pb_data/

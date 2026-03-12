@@ -15,6 +15,26 @@ A language and skill learning platform with Apple-inspired liquid glass UI.
 ## Latest Update
 
 - March 7, 2026: Dark mode with toggle button, respects system preference, persists via localStorage.
+- March 11, 2026: Began migration from local-only progress toward PocketBase-backed accounts, profiles, avatars, trophies, and synced progress. This work is not finished or verified end-to-end yet.
+
+## Current State
+
+- Core learning app is still intact and usable.
+- Auth/profile/trophy UI scaffolding has been added in [index.html](/Users/joshua/Documents/Code/lingo/index.html) and [js/lingo-app.js](/Users/joshua/Documents/Code/lingo/js/lingo-app.js).
+- PocketBase local scripts exist:
+  - `scripts/dev-pocketbase.sh`
+  - `scripts/setup-pocketbase-superuser.sh`
+- PocketBase migration work exists in `pb_migrations/1773284000_init_lingo.js`.
+- This backend migration is incomplete. The `users` auth collection/schema is not verified working yet.
+- Nothing in the account/sync flow should be considered production-ready yet.
+
+## Resume Plan
+
+1. Finish the PocketBase `users` auth collection schema so it includes all Lingo profile/progress fields.
+2. Start PocketBase from CLI only and verify the schema from the live API.
+3. Create a real Lingo account from CLI and verify login.
+4. Verify profile edits and progress writes persist correctly.
+5. Clean up the frontend contract and CSS after the backend contract is stable.
 
 ## Architecture
 
@@ -88,7 +108,8 @@ questions.newTopic = [
 
 - Pure HTML/CSS/JavaScript (no build process)
 - CSS glassmorphism with backdrop filters
-- LocalStorage for progress persistence
+- LocalStorage for current stable progress persistence
+- PocketBase integration in progress for server-backed auth/sync
 - Vercel deployment
 
 ## Browser Support

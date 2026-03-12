@@ -3,10 +3,35 @@
 ## Overview
 Modern language learning web app with Apple-inspired liquid glass UI. Single-file architecture for simplicity.
 
+## Current Checkpoint
+- Core app still works as a local learning app.
+- We started a PocketBase migration for real accounts and cloud-style sync, but it is not finished.
+- Files added/changed for that work:
+  - `js/lingo-app.js`
+  - `index.html`
+  - `pb_migrations/1773284000_init_lingo.js`
+  - `scripts/dev-pocketbase.sh`
+  - `scripts/setup-pocketbase-superuser.sh`
+- Known blocker:
+  - PocketBase bootstraps a default `users` auth collection before our custom schema logic is fully applied.
+  - The migration needs to mutate/extend the existing `users` collection correctly and then be verified against the live API.
+- Do not assume accounts/sync are working until CLI verification proves:
+  - register works
+  - login works
+  - profile fields persist
+  - XP/streak/trophies/SRS persist
+
+## Next Session Priority
+1. Stabilize PocketBase schema first.
+2. Verify the backend contract from CLI before touching the browser UI.
+3. Create the first real Lingo account only after the schema is correct.
+4. Then fix frontend/API mismatches and polish UI.
+
 ## Architecture Decisions
 - **Single HTML file + JS modules**: Zero build process, GitHub Pages deployment
 - **No frameworks**: Pure vanilla JS for maximum performance
-- **LocalStorage**: Client-side progress persistence
+- **Current stable storage**: LocalStorage
+- **Target storage upgrade in progress**: PocketBase-backed auth + synced user progress
 - **Liquid Glass UI**: Modern glassmorphism with Apple design language
 
 ## Project Structure
