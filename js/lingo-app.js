@@ -13,12 +13,12 @@ const TROPHIES = {
 };
 
 const AVATAR_PRESETS = [
-    { id: 'falcon', emoji: '🦅', label: 'Falcon' },
-    { id: 'fox', emoji: '🦊', label: 'Fox' },
-    { id: 'otter', emoji: '🦦', label: 'Otter' },
-    { id: 'panda', emoji: '🐼', label: 'Panda' },
-    { id: 'frog', emoji: '🐸', label: 'Frog' },
-    { id: 'tiger', emoji: '🐯', label: 'Tiger' }
+    { id: 'falcon', emoji: '\u{1F985}', label: 'Falcon' },
+    { id: 'fox', emoji: '\u{1F98A}', label: 'Fox' },
+    { id: 'otter', emoji: '\u{1F9A6}', label: 'Otter' },
+    { id: 'panda', emoji: '\u{1F43C}', label: 'Panda' },
+    { id: 'frog', emoji: '\u{1F438}', label: 'Frog' },
+    { id: 'tiger', emoji: '\u{1F42F}', label: 'Tiger' }
 ];
 
 const LANG_CODES = {
@@ -37,33 +37,25 @@ const LANG_CODES = {
 };
 
 const LANGUAGE_SUBJECTS = new Set(Object.keys(LANG_CODES));
-const LEGACY_KEYS = ['xp', 'streak', 'completedSubjects', 'achievements', 'srs', 'lastPlayed'];
-const AUTH_STORAGE_KEY = 'lingo.pb.auth';
+
+const PROFILE_KEY = 'lingo.profile';
+const PROGRESS_KEY = 'lingo.progress';
+const SRS_KEY = 'lingo.srs';
+
 const DEFAULT_PROGRESS = {
     xp: 0,
     streak: 0,
     hearts: 5,
     completed_subjects: [],
     trophy_ids: [],
-    srs: {},
-    last_played: '',
-    imported_legacy: false
+    last_played: ''
 };
 
 let recognition = null;
 let isListening = false;
 let selectedAuthAvatar = AVATAR_PRESETS[0].id;
 
-const pocketbaseBaseUrl = (() => {
-    if (window.LINGO_POCKETBASE_URL) return window.LINGO_POCKETBASE_URL;
-    if (window.location.protocol === 'file:') return 'http://127.0.0.1:8090';
-    return window.location.origin;
-})();
-
-const authState = {
-    token: '',
-    user: null
-};
+let localProfile = null;
 
 let gameState = {
     selectedCategory: 'languages',
@@ -93,354 +85,65 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSubjects('languages');
     initSpeechRecognition();
     updateStats();
-    updateHeaderProfile();
-    void initializeApp();
+    initializeApp();
 });
 
-async function initializeApp() {
-    updateBackendNotice();
-    restoreAuth();
-    if (!authState.token) {
-        updateShellForAuth();
-        return;
+function initializeApp() {
+    localProfile = loadProfile();
+    if (localProfile) {
+        syncGameStateFromProgress();
+        updateHeaderProfile();
+        updateStats();
     }
-
-    try {
-        await refreshAuth();
-        await importLegacyProgressIfNeeded();
-        syncGameStateFromUser();
-    } catch (_error) {
-        clearAuth();
-    }
-
-    updateHeaderProfile();
-    updateStats();
     updateShellForAuth();
     renderSubjects(gameState.selectedCategory);
 }
 
-function updateBackendNotice() {
-    const notice = document.getElementById('backendNotice');
-    notice.textContent = `Run \`./scripts/dev-pocketbase.sh\` and open ${pocketbaseBaseUrl} to use synced accounts locally.`;
+function loadProfile() {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (_) { return null; }
 }
 
-function restoreAuth() {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return;
-    try {
-        const stored = JSON.parse(raw);
-        authState.token = stored.token || '';
-        authState.user = stored.user || null;
-    } catch (_error) {
-        clearAuth();
-    }
+function saveProfile(profile) {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
 
-function persistAuth() {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-        token: authState.token,
-        user: authState.user
-    }));
+function loadProgress() {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return { ...DEFAULT_PROGRESS };
+    try { return { ...DEFAULT_PROGRESS, ...JSON.parse(raw) }; } catch (_) { return { ...DEFAULT_PROGRESS }; }
 }
 
-function clearAuth() {
-    authState.token = '';
-    authState.user = null;
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    gameState.xp = 0;
-    gameState.streak = 0;
-    gameState.hearts = 5;
-    gameState.completedSubjects = [];
-    updateHeaderProfile();
-    updateStats();
-    updateShellForAuth();
+function saveProgress(patch) {
+    const current = loadProgress();
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ ...current, ...patch }));
 }
 
-async function apiRequest(path, options = {}) {
-    const headers = new Headers(options.headers || {});
-    if (options.body && !headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json');
-    }
-    if (options.auth !== false && authState.token) {
-        headers.set('Authorization', authState.token);
-    }
-
-    const response = await fetch(`${pocketbaseBaseUrl}${path}`, {
-        method: options.method || 'GET',
-        headers,
-        body: options.body ? JSON.stringify(options.body) : undefined
-    });
-
-    const text = await response.text();
-    const data = text ? JSON.parse(text) : {};
-
-    if (!response.ok) {
-        throw new Error(data.message || `Request failed: ${response.status}`);
-    }
-
-    return data;
+function syncGameStateFromProgress() {
+    const progress = loadProgress();
+    gameState.xp = progress.xp;
+    gameState.streak = progress.streak;
+    gameState.hearts = progress.hearts;
+    gameState.completedSubjects = [...progress.completed_subjects];
 }
 
-async function refreshAuth() {
-    const data = await apiRequest('/api/collections/users/auth-refresh', {
-        method: 'POST'
-    });
-    authState.token = data.token;
-    authState.user = data.record;
-    persistAuth();
-    return data.record;
-}
-
-async function login(email, password) {
-    const data = await apiRequest('/api/collections/users/auth-with-password', {
-        method: 'POST',
-        auth: false,
-        body: {
-            identity: email,
-            password
-        }
-    });
-    authState.token = data.token;
-    authState.user = data.record;
-    persistAuth();
-    return data.record;
-}
-
-async function register(user) {
-    await apiRequest('/api/collections/users/records', {
-        method: 'POST',
-        auth: false,
-        body: {
-            username: user.username,
-            email: user.email,
-            emailVisibility: false,
-            password: user.password,
-            passwordConfirm: user.password,
-            display_name: user.displayName,
-            avatar_id: user.avatarId,
-            xp: 0,
-            streak: 0,
-            hearts: 5,
-            completed_subjects: [],
-            trophy_ids: [],
-            srs: {},
-            last_played: '',
-            imported_legacy: false
-        }
-    });
-    return login(user.email, user.password);
-}
-
-async function updateCurrentUser(patch) {
-    if (!authState.user) return null;
-    const record = await apiRequest(`/api/collections/users/records/${authState.user.id}`, {
-        method: 'PATCH',
-        body: patch
-    });
-    authState.user = record;
-    persistAuth();
-    return record;
-}
-
-function normalizeQuestionBank() {
-    Object.entries(questions).forEach(([subjectId, subjectQuestions]) => {
-        subjectQuestions.forEach((question, index) => {
-            if (!question.id) {
-                question.id = `${subjectId}-${question.type}-${index + 1}`;
-            }
-        });
-    });
-}
-
-function setupEventListeners() {
-    document.querySelectorAll('.category-tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.category-tab').forEach((item) => item.classList.remove('active'));
-            tab.classList.add('active');
-            gameState.selectedCategory = tab.dataset.category;
-            renderSubjects(gameState.selectedCategory);
-        });
-    });
-
-    document.getElementById('checkBtn').addEventListener('click', checkAnswer);
-    document.getElementById('skipBtn').addEventListener('click', skipQuestion);
-    document.getElementById('continueBtn').addEventListener('click', continueLearning);
-    document.getElementById('achievementBtn').addEventListener('click', renderAchievementPanel);
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-    document.getElementById('profileBtn').addEventListener('click', () => {
-        if (authState.user) {
-            renderProfilePanel();
-        } else {
-            showAuthMode('login');
-            document.getElementById('authShell').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-
-    document.querySelectorAll('.auth-tab').forEach((tab) => {
-        tab.addEventListener('click', () => showAuthMode(tab.dataset.authMode));
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        setAuthFeedback('Logging in...', 'info');
-        try {
-            await login(
-                document.getElementById('loginEmail').value.trim(),
-                document.getElementById('loginPassword').value
-            );
-            await importLegacyProgressIfNeeded();
-            syncGameStateFromUser();
-            updateHeaderProfile();
-            updateStats();
-            updateShellForAuth();
-            renderSubjects(gameState.selectedCategory);
-            setAuthFeedback('Logged in.', 'success');
-        } catch (error) {
-            setAuthFeedback(error.message, 'error');
-        }
-    });
-
-    document.getElementById('registerForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        setAuthFeedback('Creating account...', 'info');
-        try {
-            await register({
-                displayName: document.getElementById('registerDisplayName').value.trim(),
-                username: document.getElementById('registerUsername').value.trim().toLowerCase(),
-                email: document.getElementById('registerEmail').value.trim(),
-                password: document.getElementById('registerPassword').value,
-                avatarId: selectedAuthAvatar
-            });
-            await importLegacyProgressIfNeeded();
-            syncGameStateFromUser();
-            updateHeaderProfile();
-            updateStats();
-            updateShellForAuth();
-            renderSubjects(gameState.selectedCategory);
-            setAuthFeedback('Account created.', 'success');
-        } catch (error) {
-            setAuthFeedback(error.message, 'error');
-        }
-    });
-}
-
-function showAuthMode(mode) {
-    const isLogin = mode === 'login';
-    document.getElementById('loginTab').classList.toggle('active', isLogin);
-    document.getElementById('registerTab').classList.toggle('active', !isLogin);
-    document.getElementById('loginTab').setAttribute('aria-selected', String(isLogin));
-    document.getElementById('registerTab').setAttribute('aria-selected', String(!isLogin));
-    document.getElementById('loginForm').classList.toggle('active', isLogin);
-    document.getElementById('registerForm').classList.toggle('active', !isLogin);
-}
-
-function setAuthFeedback(message, type = 'info') {
-    const feedback = document.getElementById('authFeedback');
-    feedback.textContent = message;
-    feedback.className = `auth-feedback ${type}`;
-}
-
-function updateShellForAuth() {
-    document.getElementById('authShell').style.display = authState.user ? 'none' : 'block';
-    document.getElementById('appShell').style.display = authState.user ? 'block' : 'none';
-}
-
-function syncGameStateFromUser() {
-    const user = getUserProgress();
-    gameState.xp = user.xp;
-    gameState.streak = user.streak;
-    gameState.hearts = user.hearts;
-    gameState.completedSubjects = [...user.completed_subjects];
-}
-
-function getUserProgress() {
-    if (!authState.user) return { ...DEFAULT_PROGRESS };
-    return {
-        xp: authState.user.xp || 0,
-        streak: authState.user.streak || 0,
-        hearts: authState.user.hearts ?? 5,
-        completed_subjects: Array.isArray(authState.user.completed_subjects) ? authState.user.completed_subjects : [],
-        trophy_ids: Array.isArray(authState.user.trophy_ids) ? authState.user.trophy_ids : [],
-        srs: authState.user.srs && typeof authState.user.srs === 'object' ? authState.user.srs : {},
-        last_played: authState.user.last_played || '',
-        imported_legacy: Boolean(authState.user.imported_legacy)
-    };
-}
-
-function getAvatarById(id) {
-    return AVATAR_PRESETS.find((avatar) => avatar.id === id) || AVATAR_PRESETS[0];
-}
-
-function updateHeaderProfile() {
-    const label = authState.user?.display_name || 'Login';
-    const avatar = getAvatarById(authState.user?.avatar_id);
-    document.getElementById('profileName').textContent = label;
-    document.getElementById('profileAvatar').textContent = avatar.emoji;
-}
-
-function renderAvatarPicker(containerId, selectedId, onSelect) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = AVATAR_PRESETS.map((avatar) => `
-        <button class="avatar-option ${avatar.id === selectedId ? 'selected' : ''}" data-avatar-id="${avatar.id}" type="button" aria-label="${avatar.label}">
-            <span class="avatar-emoji">${avatar.emoji}</span>
-            <span class="avatar-label">${avatar.label}</span>
-        </button>
-    `).join('');
-
-    container.querySelectorAll('.avatar-option').forEach((button) => {
-        button.addEventListener('click', () => {
-            container.querySelectorAll('.avatar-option').forEach((item) => item.classList.remove('selected'));
-            button.classList.add('selected');
-            onSelect(button.dataset.avatarId);
-        });
-    });
-}
-
-async function importLegacyProgressIfNeeded() {
-    if (!authState.user || getUserProgress().imported_legacy || !hasLegacyProgress()) return;
-
-    const current = getUserProgress();
-    const patch = {
-        xp: Math.max(current.xp, parseInt(localStorage.getItem('xp') || '0', 10)),
-        streak: Math.max(current.streak, parseInt(localStorage.getItem('streak') || '0', 10)),
-        hearts: current.hearts,
-        completed_subjects: dedupe([
-            ...current.completed_subjects,
-            ...JSON.parse(localStorage.getItem('completedSubjects') || '[]')
-        ]),
-        trophy_ids: dedupe([
-            ...current.trophy_ids,
-            ...JSON.parse(localStorage.getItem('achievements') || '[]')
-        ]),
-        srs: {
-            ...JSON.parse(localStorage.getItem('srs') || '{}'),
-            ...current.srs
-        },
-        last_played: current.last_played || normalizeLegacyDate(localStorage.getItem('lastPlayed')),
-        imported_legacy: true
-    };
-
-    await updateCurrentUser(patch);
-}
-
-function hasLegacyProgress() {
-    return LEGACY_KEYS.some((key) => localStorage.getItem(key));
-}
-
-function normalizeLegacyDate(value) {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toISOString().slice(0, 10);
+function getUnlockedAchievements() {
+    return loadProgress().trophy_ids;
 }
 
 function getSrsData() {
-    return getUserProgress().srs;
+    const raw = localStorage.getItem(SRS_KEY);
+    if (!raw) return {};
+    try { return JSON.parse(raw); } catch (_) { return {}; }
 }
 
-async function updateSrs(questionId, quality) {
-    const srs = { ...getSrsData() };
+function saveSrsData(srs) {
+    localStorage.setItem(SRS_KEY, JSON.stringify(srs));
+}
+
+function updateSrs(questionId, quality) {
+    const srs = getSrsData();
     const card = srs[questionId] || { easiness: 2.5, interval: 1, repetitions: 0, nextReview: new Date().toISOString() };
 
     if (quality >= 3) {
@@ -458,7 +161,7 @@ async function updateSrs(questionId, quality) {
     next.setDate(next.getDate() + card.interval);
     card.nextReview = next.toISOString();
     srs[questionId] = card;
-    await updateCurrentUser({ srs });
+    saveSrsData(srs);
 }
 
 function getDueCount(subjectId) {
@@ -489,44 +192,31 @@ function getQuestionsForLesson(subjectId) {
     return [...due, ...rest].slice(0, gameState.totalQuestions);
 }
 
-function shuffle(items) {
-    for (let index = items.length - 1; index > 0; index -= 1) {
-        const swapIndex = Math.floor(Math.random() * (index + 1));
-        [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
-    }
-    return items;
-}
-
-function getUnlockedAchievements() {
-    return getUserProgress().trophy_ids;
-}
-
-async function saveAchievement(id) {
-    if (!authState.user) return;
-    const unlocked = getUnlockedAchievements();
-    if (unlocked.includes(id)) return;
-    await updateCurrentUser({ trophy_ids: [...unlocked, id] });
+function saveAchievement(id) {
+    const progress = loadProgress();
+    if (progress.trophy_ids.includes(id)) return;
+    saveProgress({ trophy_ids: [...progress.trophy_ids, id] });
     showAchievementToast(id);
 }
 
-async function checkAchievements() {
+function checkAchievements() {
     const completed = gameState.completedSubjects;
     const unlocked = getUnlockedAchievements();
 
-    if (completed.length > 0 && !unlocked.includes('firstLesson')) await saveAchievement('firstLesson');
-    if (gameState.streak >= 3 && !unlocked.includes('streak3')) await saveAchievement('streak3');
-    if (gameState.streak >= 7 && !unlocked.includes('streak7')) await saveAchievement('streak7');
-    if (gameState.streak >= 30 && !unlocked.includes('streak30')) await saveAchievement('streak30');
-    if (gameState.xp >= 100 && !unlocked.includes('xp100')) await saveAchievement('xp100');
-    if (gameState.xp >= 500 && !unlocked.includes('xp500')) await saveAchievement('xp500');
-    if (gameState.xp >= 1000 && !unlocked.includes('xp1000')) await saveAchievement('xp1000');
+    if (completed.length > 0 && !unlocked.includes('firstLesson')) saveAchievement('firstLesson');
+    if (gameState.streak >= 3 && !unlocked.includes('streak3')) saveAchievement('streak3');
+    if (gameState.streak >= 7 && !unlocked.includes('streak7')) saveAchievement('streak7');
+    if (gameState.streak >= 30 && !unlocked.includes('streak30')) saveAchievement('streak30');
+    if (gameState.xp >= 100 && !unlocked.includes('xp100')) saveAchievement('xp100');
+    if (gameState.xp >= 500 && !unlocked.includes('xp500')) saveAchievement('xp500');
+    if (gameState.xp >= 1000 && !unlocked.includes('xp1000')) saveAchievement('xp1000');
 
     const langSubjects = completed.filter((subjectId) => LANGUAGE_SUBJECTS.has(subjectId));
-    if (langSubjects.length >= 3 && !unlocked.includes('polyglot')) await saveAchievement('polyglot');
+    if (langSubjects.length >= 3 && !unlocked.includes('polyglot')) saveAchievement('polyglot');
 
     const mathIds = categories.math.subjects.map((subject) => subject.id);
-    if (mathIds.every((id) => completed.includes(id)) && !unlocked.includes('mathWiz')) await saveAchievement('mathWiz');
-    if (completed.length >= 10 && !unlocked.includes('explorer')) await saveAchievement('explorer');
+    if (mathIds.every((id) => completed.includes(id)) && !unlocked.includes('mathWiz')) saveAchievement('mathWiz');
+    if (completed.length >= 10 && !unlocked.includes('explorer')) saveAchievement('explorer');
 }
 
 function showAchievementToast(id) {
@@ -535,13 +225,23 @@ function showAchievementToast(id) {
     const toast = document.createElement('div');
     toast.className = 'achievement-toast';
     toast.setAttribute('role', 'alert');
-    toast.innerHTML = `
-        <div class="achievement-toast-icon"><i class="${trophy.icon}"></i></div>
-        <div class="achievement-toast-content">
-            <div class="achievement-toast-title">Trophy unlocked</div>
-            <div class="achievement-toast-name">${trophy.name}</div>
-        </div>
-    `;
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'achievement-toast-icon';
+    const iconEl = document.createElement('i');
+    iconEl.className = trophy.icon;
+    iconDiv.appendChild(iconEl);
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'achievement-toast-content';
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'achievement-toast-title';
+    titleDiv.textContent = 'Trophy unlocked';
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'achievement-toast-name';
+    nameDiv.textContent = trophy.name;
+    contentDiv.appendChild(titleDiv);
+    contentDiv.appendChild(nameDiv);
+    toast.appendChild(iconDiv);
+    toast.appendChild(contentDiv);
     document.body.appendChild(toast);
     requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
     setTimeout(() => {
@@ -553,74 +253,169 @@ function showAchievementToast(id) {
 function renderAchievementPanel() {
     const unlocked = getUnlockedAchievements();
     const panel = document.getElementById('achievementPanel');
-    panel.innerHTML = `
-        <div class="achievement-panel-header">
-            <h2>Trophies</h2>
-            <button class="btn achievement-close" id="closeTrophiesBtn" aria-label="Close trophies"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="achievement-list">
-            ${Object.entries(TROPHIES).map(([id, trophy]) => `
-                <div class="achievement-item ${unlocked.includes(id) ? 'unlocked' : 'locked'}">
-                    <div class="achievement-icon"><i class="${trophy.icon}"></i></div>
-                    <div class="achievement-info">
-                        <div class="achievement-name">${trophy.name}</div>
-                        <div class="achievement-desc">${trophy.desc}</div>
-                    </div>
-                    ${unlocked.includes(id) ? '<i class="fa-solid fa-check achievement-check"></i>' : ''}
-                </div>
-            `).join('')}
-        </div>
-    `;
+    panel.textContent = '';
+
+    const header = document.createElement('div');
+    header.className = 'achievement-panel-header';
+    const h2 = document.createElement('h2');
+    h2.textContent = 'Trophies';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn achievement-close';
+    closeBtn.id = 'closeTrophiesBtn';
+    closeBtn.setAttribute('aria-label', 'Close trophies');
+    closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    header.appendChild(h2);
+    header.appendChild(closeBtn);
+    panel.appendChild(header);
+
+    const list = document.createElement('div');
+    list.className = 'achievement-list';
+    Object.entries(TROPHIES).forEach(([id, trophy]) => {
+        const item = document.createElement('div');
+        item.className = 'achievement-item ' + (unlocked.includes(id) ? 'unlocked' : 'locked');
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'achievement-icon';
+        const iconEl = document.createElement('i');
+        iconEl.className = trophy.icon;
+        iconDiv.appendChild(iconEl);
+        const info = document.createElement('div');
+        info.className = 'achievement-info';
+        const name = document.createElement('div');
+        name.className = 'achievement-name';
+        name.textContent = trophy.name;
+        const desc = document.createElement('div');
+        desc.className = 'achievement-desc';
+        desc.textContent = trophy.desc;
+        info.appendChild(name);
+        info.appendChild(desc);
+        item.appendChild(iconDiv);
+        item.appendChild(info);
+        if (unlocked.includes(id)) {
+            const check = document.createElement('i');
+            check.className = 'fa-solid fa-check achievement-check';
+            item.appendChild(check);
+        }
+        list.appendChild(item);
+    });
+    panel.appendChild(list);
+
     panel.classList.add('active');
     trapFocus(panel);
     document.getElementById('closeTrophiesBtn').addEventListener('click', () => panel.classList.remove('active'));
 }
 
 function renderProfilePanel() {
-    if (!authState.user) return;
+    if (!localProfile) return;
 
     const panel = document.getElementById('profilePanel');
-    const avatar = getAvatarById(authState.user.avatar_id);
-    panel.innerHTML = `
-        <div class="profile-panel-header">
-            <div>
-                <div class="profile-panel-kicker">Profile</div>
-                <h2>${escapeHtml(authState.user.display_name || authState.user.username)}</h2>
-            </div>
-            <button class="btn achievement-close" id="closeProfileBtn" aria-label="Close profile"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="profile-summary">
-            <div class="profile-summary-avatar">${avatar.emoji}</div>
-            <div class="profile-summary-copy">
-                <div class="profile-summary-name">${escapeHtml(authState.user.display_name || authState.user.username)}</div>
-                <div class="profile-summary-meta">@${escapeHtml(authState.user.username)} · ${escapeHtml(authState.user.email)}</div>
-            </div>
-        </div>
-        <form class="profile-form" id="profileForm">
-            <label class="auth-field">
-                <span>Display name</span>
-                <input type="text" id="profileDisplayName" value="${escapeHtml(authState.user.display_name || '')}" maxlength="50" required>
-            </label>
-            <label class="auth-field">
-                <span>Username</span>
-                <input type="text" id="profileUsername" value="${escapeHtml(authState.user.username || '')}" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" required>
-            </label>
-            <div class="avatar-picker" id="profileAvatarPicker"></div>
-            <div class="profile-stats-grid">
-                <div class="profile-stat"><strong>${gameState.xp}</strong><span>Total XP</span></div>
-                <div class="profile-stat"><strong>${gameState.streak}</strong><span>Day streak</span></div>
-                <div class="profile-stat"><strong>${gameState.completedSubjects.length}</strong><span>Courses tried</span></div>
-                <div class="profile-stat"><strong>${getUnlockedAchievements().length}</strong><span>Trophies</span></div>
-            </div>
-            <div class="profile-actions">
-                <button class="btn btn-primary" type="submit">Save profile</button>
-                <button class="btn" type="button" id="logoutBtn">Logout</button>
-            </div>
-            <div class="auth-feedback" id="profileFeedback" aria-live="polite"></div>
-        </form>
-    `;
+    const avatar = getAvatarById(localProfile.avatar_id);
+    panel.textContent = '';
 
-    let selectedAvatar = authState.user.avatar_id;
+    const panelHeader = document.createElement('div');
+    panelHeader.className = 'profile-panel-header';
+    const headerLeft = document.createElement('div');
+    const kicker = document.createElement('div');
+    kicker.className = 'profile-panel-kicker';
+    kicker.textContent = 'Profile';
+    const h2 = document.createElement('h2');
+    h2.textContent = localProfile.display_name;
+    headerLeft.appendChild(kicker);
+    headerLeft.appendChild(h2);
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn achievement-close';
+    closeBtn.id = 'closeProfileBtn';
+    closeBtn.setAttribute('aria-label', 'Close profile');
+    closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    panelHeader.appendChild(headerLeft);
+    panelHeader.appendChild(closeBtn);
+    panel.appendChild(panelHeader);
+
+    const summary = document.createElement('div');
+    summary.className = 'profile-summary';
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'profile-summary-avatar';
+    avatarDiv.textContent = avatar.emoji;
+    const summaryInfo = document.createElement('div');
+    summaryInfo.className = 'profile-summary-copy';
+    const summaryName = document.createElement('div');
+    summaryName.className = 'profile-summary-name';
+    summaryName.textContent = localProfile.display_name;
+    const summaryMeta = document.createElement('div');
+    summaryMeta.className = 'profile-summary-meta';
+    summaryMeta.textContent = 'Local profile';
+    summaryInfo.appendChild(summaryName);
+    summaryInfo.appendChild(summaryMeta);
+    summary.appendChild(avatarDiv);
+    summary.appendChild(summaryInfo);
+    panel.appendChild(summary);
+
+    const form = document.createElement('form');
+    form.className = 'profile-form';
+    form.id = 'profileForm';
+
+    const nameLabel = document.createElement('label');
+    nameLabel.className = 'auth-field';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = 'Display name';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = 'profileDisplayName';
+    nameInput.value = localProfile.display_name;
+    nameInput.maxLength = 50;
+    nameInput.required = true;
+    nameLabel.appendChild(nameSpan);
+    nameLabel.appendChild(nameInput);
+    form.appendChild(nameLabel);
+
+    const avatarPickerDiv = document.createElement('div');
+    avatarPickerDiv.className = 'avatar-picker';
+    avatarPickerDiv.id = 'profileAvatarPicker';
+    form.appendChild(avatarPickerDiv);
+
+    const statsGrid = document.createElement('div');
+    statsGrid.className = 'profile-stats-grid';
+    [
+        [gameState.xp, 'Total XP'],
+        [gameState.streak, 'Day streak'],
+        [gameState.completedSubjects.length, 'Courses tried'],
+        [getUnlockedAchievements().length, 'Trophies']
+    ].forEach(([val, label]) => {
+        const stat = document.createElement('div');
+        stat.className = 'profile-stat';
+        const strong = document.createElement('strong');
+        strong.textContent = val;
+        const span = document.createElement('span');
+        span.textContent = label;
+        stat.appendChild(strong);
+        stat.appendChild(span);
+        statsGrid.appendChild(stat);
+    });
+    form.appendChild(statsGrid);
+
+    const actions = document.createElement('div');
+    actions.className = 'profile-actions';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-primary';
+    saveBtn.type = 'submit';
+    saveBtn.textContent = 'Save profile';
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'btn';
+    resetBtn.type = 'button';
+    resetBtn.id = 'resetProfileBtn';
+    resetBtn.textContent = 'Reset progress';
+    actions.appendChild(saveBtn);
+    actions.appendChild(resetBtn);
+    form.appendChild(actions);
+
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = 'auth-feedback';
+    feedbackDiv.id = 'profileFeedback';
+    feedbackDiv.setAttribute('aria-live', 'polite');
+    form.appendChild(feedbackDiv);
+
+    panel.appendChild(form);
+
+    let selectedAvatar = localProfile.avatar_id;
     renderAvatarPicker('profileAvatarPicker', selectedAvatar, (avatarId) => {
         selectedAvatar = avatarId;
     });
@@ -629,28 +424,120 @@ function renderProfilePanel() {
     trapFocus(panel);
 
     document.getElementById('closeProfileBtn').addEventListener('click', () => panel.classList.remove('active'));
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        clearAuth();
-        panel.classList.remove('active');
+    document.getElementById('resetProfileBtn').addEventListener('click', () => {
+        if (confirm('Reset all progress? This cannot be undone.')) {
+            localStorage.removeItem(PROGRESS_KEY);
+            localStorage.removeItem(SRS_KEY);
+            localProfile = null;
+            localStorage.removeItem(PROFILE_KEY);
+            gameState.xp = 0;
+            gameState.streak = 0;
+            gameState.hearts = 5;
+            gameState.completedSubjects = [];
+            updateHeaderProfile();
+            updateStats();
+            panel.classList.remove('active');
+            updateShellForAuth();
+        }
     });
-    document.getElementById('profileForm').addEventListener('submit', async (event) => {
+    document.getElementById('profileForm').addEventListener('submit', (event) => {
         event.preventDefault();
         const feedback = document.getElementById('profileFeedback');
-        feedback.textContent = 'Saving...';
-        feedback.className = 'auth-feedback info';
-        try {
-            await updateCurrentUser({
-                display_name: document.getElementById('profileDisplayName').value.trim(),
-                username: document.getElementById('profileUsername').value.trim().toLowerCase(),
-                avatar_id: selectedAvatar
-            });
-            updateHeaderProfile();
-            feedback.textContent = 'Profile saved.';
-            feedback.className = 'auth-feedback success';
-        } catch (error) {
-            feedback.textContent = error.message;
-            feedback.className = 'auth-feedback error';
+        localProfile.display_name = document.getElementById('profileDisplayName').value.trim();
+        localProfile.avatar_id = selectedAvatar;
+        saveProfile(localProfile);
+        updateHeaderProfile();
+        feedback.textContent = 'Profile saved.';
+        feedback.className = 'auth-feedback success';
+    });
+}
+
+function normalizeQuestionBank() {
+    Object.entries(questions).forEach(([subjectId, subjectQuestions]) => {
+        subjectQuestions.forEach((question, index) => {
+            if (!question.id) {
+                question.id = `${subjectId}-${question.type}-${index + 1}`;
+            }
+        });
+    });
+}
+
+function setupEventListeners() {
+    document.querySelectorAll('.category-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.category-tab').forEach((item) => item.classList.remove('active'));
+            tab.classList.add('active');
+            gameState.selectedCategory = tab.dataset.category;
+            renderSubjects(gameState.selectedCategory);
+        });
+    });
+
+    document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+    document.getElementById('skipBtn').addEventListener('click', skipQuestion);
+    document.getElementById('continueBtn').addEventListener('click', continueLearning);
+    document.getElementById('achievementBtn').addEventListener('click', renderAchievementPanel);
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('profileBtn').addEventListener('click', () => {
+        if (localProfile) {
+            renderProfilePanel();
+        } else {
+            document.getElementById('authShell').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    });
+
+    document.getElementById('localProfileForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const name = document.getElementById('localDisplayName').value.trim();
+        if (!name) return;
+        localProfile = { display_name: name, avatar_id: selectedAuthAvatar };
+        saveProfile(localProfile);
+        updateHeaderProfile();
+        updateStats();
+        updateShellForAuth();
+        renderSubjects(gameState.selectedCategory);
+    });
+}
+
+function updateShellForAuth() {
+    document.getElementById('authShell').style.display = localProfile ? 'none' : 'block';
+    document.getElementById('appShell').style.display = localProfile ? 'block' : 'none';
+}
+
+function getAvatarById(id) {
+    return AVATAR_PRESETS.find((avatar) => avatar.id === id) || AVATAR_PRESETS[0];
+}
+
+function updateHeaderProfile() {
+    const label = localProfile ? localProfile.display_name : 'Start';
+    const avatar = getAvatarById(localProfile ? localProfile.avatar_id : null);
+    document.getElementById('profileName').textContent = label;
+    document.getElementById('profileAvatar').textContent = avatar.emoji;
+}
+
+function renderAvatarPicker(containerId, selectedId, onSelect) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.textContent = '';
+    AVATAR_PRESETS.forEach((avatar) => {
+        const button = document.createElement('button');
+        button.className = 'avatar-option' + (avatar.id === selectedId ? ' selected' : '');
+        button.dataset.avatarId = avatar.id;
+        button.type = 'button';
+        button.setAttribute('aria-label', avatar.label);
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'avatar-emoji';
+        emojiSpan.textContent = avatar.emoji;
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'avatar-label';
+        labelSpan.textContent = avatar.label;
+        button.appendChild(emojiSpan);
+        button.appendChild(labelSpan);
+        button.addEventListener('click', () => {
+            container.querySelectorAll('.avatar-option').forEach((item) => item.classList.remove('selected'));
+            button.classList.add('selected');
+            onSelect(button.dataset.avatarId);
+        });
+        container.appendChild(button);
     });
 }
 
@@ -797,18 +684,36 @@ function renderSubjects(category) {
     if (!categoryData) return;
     document.getElementById('categoryTitle').textContent = categoryData.title;
     const grid = document.getElementById('subjectGrid');
-    grid.innerHTML = categoryData.subjects.map((subject) => {
+    grid.textContent = '';
+    categoryData.subjects.forEach((subject) => {
         const dueCount = getDueCount(subject.id);
-        return `
-            <div class="subject-card" data-subject="${subject.id}" role="button" tabindex="0" aria-label="${subject.name}">
-                <div class="subject-icon"><i class="${subject.icon}" aria-hidden="true"></i></div>
-                <div class="subject-name">${subject.name}</div>
-                <div class="subject-level">${subject.level}</div>
-                ${dueCount > 0 ? `<div class="review-badge">${dueCount} due</div>` : ''}
-            </div>
-        `;
-    }).join('');
-    grid.querySelectorAll('.subject-card').forEach((card) => {
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        card.dataset.subject = subject.id;
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', subject.name);
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'subject-icon';
+        const iconEl = document.createElement('i');
+        iconEl.className = subject.icon;
+        iconEl.setAttribute('aria-hidden', 'true');
+        iconDiv.appendChild(iconEl);
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'subject-name';
+        nameDiv.textContent = subject.name;
+        const levelDiv = document.createElement('div');
+        levelDiv.className = 'subject-level';
+        levelDiv.textContent = subject.level;
+        card.appendChild(iconDiv);
+        card.appendChild(nameDiv);
+        card.appendChild(levelDiv);
+        if (dueCount > 0) {
+            const badge = document.createElement('div');
+            badge.className = 'review-badge';
+            badge.textContent = dueCount + ' due';
+            card.appendChild(badge);
+        }
         card.addEventListener('click', () => selectSubject(card));
         card.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -816,12 +721,13 @@ function renderSubjects(category) {
                 selectSubject(card);
             }
         });
+        grid.appendChild(card);
     });
 }
 
 function selectSubject(card) {
-    if (!authState.user) {
-        showAuthMode('login');
+    if (!localProfile) {
+        document.getElementById('authShell').scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
     }
     document.querySelectorAll('.subject-card').forEach((subjectCard) => subjectCard.classList.remove('selected'));
@@ -852,7 +758,7 @@ function startLesson() {
 function loadQuestion() {
     const question = gameState.lessonQuestions[gameState.currentQuestion];
     if (!question) {
-        void showResults();
+        showResults();
         return;
     }
     const progress = (gameState.currentQuestion / gameState.totalQuestions) * 100;
@@ -872,93 +778,177 @@ function loadQuestion() {
 
 function renderQuestion(question) {
     const container = document.getElementById('questionContainer');
-    container.innerHTML = '';
+    container.textContent = '';
     const isLanguage = LANGUAGE_SUBJECTS.has(gameState.selectedSubject);
     const hasSpeech = recognition && isLanguage;
 
+    const typeDiv = document.createElement('div');
+    typeDiv.className = 'question-type';
+
     if (question.type === 'translation' || question.type === 'mathChoice') {
-        container.innerHTML = `
-            <div class="question-type">${question.type === 'mathChoice' ? 'Choose the correct answer' : 'Select the correct translation'}</div>
-            <div class="question-text">${question.question}</div>
-            ${hasSpeech && question.type === 'translation' ? '<button class="mic-btn" id="micBtn" aria-label="Speak your answer"><i class="fa-solid fa-microphone"></i></button>' : ''}
-            <div class="choices-container" role="radiogroup">
-                ${question.choices.map((choice, index) => `<button class="choice-btn" data-choice="${escapeHtml(choice)}" role="radio" aria-checked="false" tabindex="${index === 0 ? '0' : '-1'}">${choice}</button>`).join('')}
-            </div>
-        `;
-        container.querySelectorAll('.choice-btn').forEach((button) => button.addEventListener('click', () => selectChoice(button)));
+        typeDiv.textContent = question.type === 'mathChoice' ? 'Choose the correct answer' : 'Select the correct translation';
+        container.appendChild(typeDiv);
+
+        const questionText = document.createElement('div');
+        questionText.className = 'question-text';
+        questionText.textContent = question.question;
+        container.appendChild(questionText);
+
         if (hasSpeech && question.type === 'translation') {
-            document.getElementById('micBtn').addEventListener('click', () => {
-                if (isListening) {
-                    recognition.stop();
-                    return;
-                }
-                startListening(LANG_CODES[gameState.selectedSubject] || 'en-US', (transcript) => {
-                    const normalized = transcript.toLowerCase().trim();
-                    const button = [...container.querySelectorAll('.choice-btn')].find((choice) => choice.dataset.choice.toLowerCase() === normalized);
-                    if (button) selectChoice(button);
-                });
-            });
+            const micBtn = document.createElement('button');
+            micBtn.className = 'mic-btn';
+            micBtn.id = 'micBtn';
+            micBtn.setAttribute('aria-label', 'Speak your answer');
+            micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+            container.appendChild(micBtn);
         }
-    } else if (question.type === 'sentence') {
-        container.innerHTML = `
-            <div class="question-type">Translate this sentence</div>
-            <div class="question-text">${question.question}</div>
-            ${hasSpeech ? '<button class="mic-btn" id="micBtn" aria-label="Speak your answer"><i class="fa-solid fa-microphone"></i></button>' : ''}
-            <div class="answer-box" id="answerBox" aria-live="polite"></div>
-            <div class="word-bank">
-                ${question.words.map((word) => `<div class="word-chip" data-word="${escapeHtml(word)}" role="button" tabindex="0">${word}</div>`).join('')}
-            </div>
-        `;
-        container.querySelectorAll('.word-chip').forEach((chip) => {
-            chip.addEventListener('click', () => toggleWord(chip));
-            chip.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    toggleWord(chip);
-                }
-            });
+
+        const choicesDiv = document.createElement('div');
+        choicesDiv.className = 'choices-container';
+        choicesDiv.setAttribute('role', 'radiogroup');
+        question.choices.forEach((choice, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.dataset.choice = choice;
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', 'false');
+            btn.setAttribute('tabindex', index === 0 ? '0' : '-1');
+            btn.textContent = choice;
+            btn.addEventListener('click', () => selectChoice(btn));
+            choicesDiv.appendChild(btn);
         });
-        if (hasSpeech) {
-            document.getElementById('micBtn').addEventListener('click', () => {
-                if (isListening) {
-                    recognition.stop();
-                    return;
-                }
-                startListening(LANG_CODES[gameState.selectedSubject] || 'en-US', (transcript) => {
-                    const words = transcript.toLowerCase().split(/\s+/);
-                    words.forEach((word) => {
-                        const chip = [...container.querySelectorAll('.word-chip:not(.used)')].find((item) => item.dataset.word.toLowerCase() === word);
-                        if (chip) toggleWord(chip);
+        container.appendChild(choicesDiv);
+
+        if (hasSpeech && question.type === 'translation') {
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) {
+                micBtn.addEventListener('click', () => {
+                    if (isListening) { recognition.stop(); return; }
+                    startListening(LANG_CODES[gameState.selectedSubject] || 'en-US', (transcript) => {
+                        const normalized = transcript.toLowerCase().trim();
+                        const btn = [...container.querySelectorAll('.choice-btn')].find((b) => b.dataset.choice.toLowerCase() === normalized);
+                        if (btn) selectChoice(btn);
                     });
                 });
+            }
+        }
+    } else if (question.type === 'sentence') {
+        typeDiv.textContent = 'Translate this sentence';
+        container.appendChild(typeDiv);
+
+        const questionText = document.createElement('div');
+        questionText.className = 'question-text';
+        questionText.textContent = question.question;
+        container.appendChild(questionText);
+
+        if (hasSpeech) {
+            const micBtn = document.createElement('button');
+            micBtn.className = 'mic-btn';
+            micBtn.id = 'micBtn';
+            micBtn.setAttribute('aria-label', 'Speak your answer');
+            micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+            container.appendChild(micBtn);
+        }
+
+        const answerBox = document.createElement('div');
+        answerBox.className = 'answer-box';
+        answerBox.id = 'answerBox';
+        answerBox.setAttribute('aria-live', 'polite');
+        container.appendChild(answerBox);
+
+        const wordBank = document.createElement('div');
+        wordBank.className = 'word-bank';
+        question.words.forEach((word) => {
+            const chip = document.createElement('div');
+            chip.className = 'word-chip';
+            chip.dataset.word = word;
+            chip.setAttribute('role', 'button');
+            chip.setAttribute('tabindex', '0');
+            chip.textContent = word;
+            chip.addEventListener('click', () => toggleWord(chip));
+            chip.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleWord(chip); }
             });
+            wordBank.appendChild(chip);
+        });
+        container.appendChild(wordBank);
+
+        if (hasSpeech) {
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) {
+                micBtn.addEventListener('click', () => {
+                    if (isListening) { recognition.stop(); return; }
+                    startListening(LANG_CODES[gameState.selectedSubject] || 'en-US', (transcript) => {
+                        const words = transcript.toLowerCase().split(/\s+/);
+                        words.forEach((word) => {
+                            const chip = [...container.querySelectorAll('.word-chip:not(.used)')].find((c) => c.dataset.word.toLowerCase() === word);
+                            if (chip) toggleWord(chip);
+                        });
+                    });
+                });
+            }
         }
     } else if (question.type === 'listening') {
-        container.innerHTML = `
-            <div class="question-type">Type what you hear</div>
-            <div class="question-text"><i class="fa-solid fa-volume-high" style="margin-right:0.5rem;opacity:0.5;" aria-hidden="true"></i>${question.audio}</div>
-            ${hasSpeech ? '<button class="mic-btn" id="micBtn" aria-label="Speak your answer"><i class="fa-solid fa-microphone"></i></button>' : ''}
-            <input type="text" class="translation-input" id="listeningInput" placeholder="Type your answer here..." aria-label="Your answer">
-        `;
-        setTimeout(() => document.getElementById('listeningInput')?.focus(), 100);
+        typeDiv.textContent = 'Type what you hear';
+        container.appendChild(typeDiv);
+
+        const questionText = document.createElement('div');
+        questionText.className = 'question-text';
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-volume-high';
+        icon.style.marginRight = '0.5rem';
+        icon.style.opacity = '0.5';
+        icon.setAttribute('aria-hidden', 'true');
+        questionText.appendChild(icon);
+        questionText.appendChild(document.createTextNode(question.audio));
+        container.appendChild(questionText);
+
         if (hasSpeech) {
-            document.getElementById('micBtn').addEventListener('click', () => {
-                if (isListening) {
-                    recognition.stop();
-                    return;
-                }
-                startListening(LANG_CODES[gameState.selectedSubject] || 'en-US', (transcript) => {
-                    document.getElementById('listeningInput').value = transcript;
+            const micBtn = document.createElement('button');
+            micBtn.className = 'mic-btn';
+            micBtn.id = 'micBtn';
+            micBtn.setAttribute('aria-label', 'Speak your answer');
+            micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+            container.appendChild(micBtn);
+        }
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'translation-input';
+        input.id = 'listeningInput';
+        input.placeholder = 'Type your answer here...';
+        input.setAttribute('aria-label', 'Your answer');
+        container.appendChild(input);
+        setTimeout(() => input.focus(), 100);
+
+        if (hasSpeech) {
+            const micBtn = document.getElementById('micBtn');
+            if (micBtn) {
+                micBtn.addEventListener('click', () => {
+                    if (isListening) { recognition.stop(); return; }
+                    startListening(LANG_CODES[gameState.selectedSubject] || 'en-US', (transcript) => {
+                        document.getElementById('listeningInput').value = transcript;
+                    });
                 });
-            });
+            }
         }
     } else if (question.type === 'math') {
-        container.innerHTML = `
-            <div class="question-type">Solve the problem</div>
-            <div class="math-equation">${question.question}</div>
-            <input type="text" class="math-input" id="mathInput" placeholder="Enter your answer" aria-label="Your answer">
-        `;
-        setTimeout(() => document.getElementById('mathInput')?.focus(), 100);
+        typeDiv.textContent = 'Solve the problem';
+        container.appendChild(typeDiv);
+
+        const eq = document.createElement('div');
+        eq.className = 'math-equation';
+        eq.textContent = question.question;
+        container.appendChild(eq);
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'math-input';
+        input.id = 'mathInput';
+        input.placeholder = 'Enter your answer';
+        input.setAttribute('aria-label', 'Your answer');
+        container.appendChild(input);
+        setTimeout(() => input.focus(), 100);
     }
 
     gameState.currentQuestionData = question;
@@ -985,11 +975,17 @@ function toggleWord(chip) {
         chip.classList.add('used');
         gameState.answerWords.push(word);
     }
-    answerBox.innerHTML = gameState.answerWords.map((item) => `<div class="word-chip">${item}</div>`).join('');
+    answerBox.textContent = '';
+    gameState.answerWords.forEach((item) => {
+        const chip2 = document.createElement('div');
+        chip2.className = 'word-chip';
+        chip2.textContent = item;
+        answerBox.appendChild(chip2);
+    });
     gameState.currentAnswer = gameState.answerWords.join(' ');
 }
 
-async function checkAnswer() {
+function checkAnswer() {
     const question = gameState.currentQuestionData;
     let isCorrect = false;
 
@@ -1003,7 +999,7 @@ async function checkAnswer() {
         isCorrect = input?.replace(/\s/g, '').toLowerCase() === question.answer.replace(/\s/g, '').toLowerCase();
     }
 
-    if (question.id) await updateSrs(question.id, isCorrect ? 5 : 1);
+    if (question.id) updateSrs(question.id, isCorrect ? 5 : 1);
 
     const feedback = document.getElementById('feedback');
     const questionCard = document.querySelector('.question-card');
@@ -1026,7 +1022,10 @@ async function checkAnswer() {
         }
     } else {
         feedback.className = 'feedback incorrect show';
-        feedback.innerHTML = `Incorrect. The answer is: <strong>${question.answer}</strong>`;
+        feedback.textContent = 'Incorrect. The answer is: ';
+        const strong = document.createElement('strong');
+        strong.textContent = question.answer;
+        feedback.appendChild(strong);
         gameState.hearts -= 1;
         vibrate([50, 30, 50]);
         questionCard.classList.add('incorrect-anim');
@@ -1047,7 +1046,7 @@ async function checkAnswer() {
     }
 
     if (gameState.hearts <= 0) {
-        setTimeout(() => void showResults(), 1500);
+        setTimeout(() => showResults(), 1500);
     }
 }
 
@@ -1079,19 +1078,19 @@ function skipQuestion() {
 function nextQuestion() {
     gameState.currentQuestion += 1;
     if (gameState.currentQuestion >= gameState.totalQuestions || gameState.hearts <= 0) {
-        void showResults();
+        showResults();
     } else {
         loadQuestion();
     }
 }
 
-async function showResults() {
+function showResults() {
     document.getElementById('lessonContainer').classList.remove('active');
     document.getElementById('resultContainer').classList.add('active');
     document.getElementById('correctCount').textContent = gameState.correctAnswers;
     document.getElementById('xpEarned').textContent = gameState.correctAnswers * 10;
 
-    const progress = getUserProgress();
+    const progress = loadProgress();
     const today = new Date().toISOString().slice(0, 10);
     if (progress.last_played !== today) {
         if (!progress.last_played) {
@@ -1106,18 +1105,18 @@ async function showResults() {
         gameState.completedSubjects.push(gameState.selectedSubject);
     }
 
-    if (gameState.correctAnswers === gameState.totalQuestions) {
-        await saveAchievement('perfectLesson');
-    }
-
-    await updateCurrentUser({
+    saveProgress({
         xp: gameState.xp,
         streak: gameState.streak,
         hearts: Math.max(gameState.hearts, 0),
         completed_subjects: [...gameState.completedSubjects],
         last_played: today
     });
-    await checkAchievements();
+
+    if (gameState.correctAnswers === gameState.totalQuestions) {
+        saveAchievement('perfectLesson');
+    }
+    checkAchievements();
 
     spawnConfetti();
     updateStats();
@@ -1139,8 +1138,12 @@ function updateStats() {
     document.getElementById('hearts').textContent = gameState.hearts;
 }
 
-function dedupe(items) {
-    return [...new Set(items)];
+function shuffle(items) {
+    for (let index = items.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
+    }
+    return items;
 }
 
 function escapeHtml(value) {

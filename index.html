@@ -53,51 +53,19 @@
         <section class="auth-shell" id="authShell" aria-labelledby="authTitle">
             <div class="auth-card">
                 <div class="auth-copy">
-                    <div class="auth-kicker">Cloud sync</div>
-                    <h1 id="authTitle">Sign in to keep your streak, trophies, and profile in sync.</h1>
-                    <p class="auth-subtitle">Static frontend, real accounts. PocketBase handles auth and synced progress.</p>
-                    <div class="backend-notice" id="backendNotice">
-                        Run the local PocketBase server to enable synced accounts.
-                    </div>
+                    <div class="auth-kicker">Local</div>
+                    <h1 id="authTitle">Pick a name to track your streak, trophies, and progress.</h1>
+                    <p class="auth-subtitle">Practice languages, math, science, and more.</p>
                 </div>
 
                 <div class="auth-panel">
-                    <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
-                        <button class="auth-tab active" id="loginTab" data-auth-mode="login" role="tab" aria-selected="true">Login</button>
-                        <button class="auth-tab" id="registerTab" data-auth-mode="register" role="tab" aria-selected="false">Register</button>
-                    </div>
-
-                    <form class="auth-form active" id="loginForm">
-                        <label class="auth-field">
-                            <span>Email</span>
-                            <input type="email" id="loginEmail" autocomplete="email" required>
-                        </label>
-                        <label class="auth-field">
-                            <span>Password</span>
-                            <input type="password" id="loginPassword" autocomplete="current-password" required>
-                        </label>
-                        <button class="btn btn-primary auth-submit" type="submit">Login</button>
-                    </form>
-
-                    <form class="auth-form" id="registerForm">
+                    <form class="auth-form active" id="localProfileForm">
                         <label class="auth-field">
                             <span>Display name</span>
-                            <input type="text" id="registerDisplayName" maxlength="50" required>
-                        </label>
-                        <label class="auth-field">
-                            <span>Username</span>
-                            <input type="text" id="registerUsername" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" required>
-                        </label>
-                        <label class="auth-field">
-                            <span>Email</span>
-                            <input type="email" id="registerEmail" autocomplete="email" required>
-                        </label>
-                        <label class="auth-field">
-                            <span>Password</span>
-                            <input type="password" id="registerPassword" autocomplete="new-password" minlength="8" required>
+                            <input type="text" id="localDisplayName" maxlength="50" placeholder="Your name" required>
                         </label>
                         <div class="avatar-picker" id="authAvatarPicker" aria-label="Choose an avatar"></div>
-                        <button class="btn btn-primary auth-submit" type="submit">Create account</button>
+                        <button class="btn btn-primary auth-submit" type="submit">Start learning</button>
                     </form>
 
                     <div class="auth-feedback" id="authFeedback" aria-live="polite"></div>
